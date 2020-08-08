@@ -1,4 +1,4 @@
-from quart import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g
 import datetime
 from ..auth_tools import login_required
 from data.model import *
