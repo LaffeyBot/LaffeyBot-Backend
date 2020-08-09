@@ -1,5 +1,5 @@
 from data.model import Records, Groups
-import config
+from config import Config
 
 
 def damage_to_score(record: Records) -> int:
@@ -19,4 +19,4 @@ def subtract_damage_from_group(record: Records, group: Groups):
         else:
             group.current_boss_order = 1
             group.current_boss_gen += 1
-        group.boss_remaining_health = config.BOSS_HEALTH[group.current_boss_order-1]
+        group.boss_remaining_health = Config.BOSS_HEALTH[group.current_boss_order-1]
