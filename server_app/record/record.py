@@ -48,7 +48,7 @@ def add_record():
 
     """
     user: Users = g.user
-    damage = request.args.get('damage', None)
+    damage = request.form.get('damage', None)
     boss_gen = request.form.get('boss_gen', None)
     boss_order = request.form.get('boss_order', None)
     user_id = request.form.get('user_id', None)
@@ -91,6 +91,67 @@ def add_record():
     }), 200
 
 
+@record_blueprint.route('/get_records', methods=['GET'])
+@login_required
+def get_records():
+    """
+    @api {post} /v1/record/get_records 获取出刀列表
+    @apiVersion 1.0.0
+    @apiName get_records
+    @apiGroup Records
+    @apiParam {int}     limit             (可选)    多少条数据
+    @apiParam {String}  page              (可选)    第几页(如果提供page则必须提供limit）(0为第一页）
+    @apiParam {int}     start_date        (可选)    开始日期时间戳（秒）
+    @apiParam {int}     end_date          (可选)    结束日期时间戳（秒）
+    @apiDescription 返回公会中的出刀列表，如果无参数则返回所有出刀记录。
+
+
+    @apiSuccess (回参) {String}           msg   为"Successful!"
+    @apiSuccess (回参) {List[Dictionary]} data  相应的Records，具体内容参照Records表
+
+    @apiErrorExample {json} 用户没有加入公会
+        HTTP/1.1 403 Forbidden
+        {"msg": "User is not in any group.", "code": 402}
+
+    @apiErrorExample {json} 用户的公会不存在
+        HTTP/1.1 403 Forbidden
+        {"msg": "User's group not found.", "code": 403}
+
+    """
+    user: Users = g.user
+    limit = request.args.get('limit', 0)
+    page = request.args.get('page', 0)
+    start_date: int = request.args.get('start_date', -1)
+    end_date: int = request.args.get('end_date', -1)
+
+    if user.group_id == -1:
+        return jsonify({"msg": "User is not in any group.", "code": 402}), 403
+
+    group: Groups = get_group_of_user()
+    if not group:
+        return jsonify({"msg": "User's group not found.", "code": 403}), 403
+
+    records = db.session.query(Records).filter(Records.group_id == user.group_id)
+    if start_date != -1:
+        start = datetime.datetime.fromtimestamp(start_date)
+        records.filter(Records.date <= start)
+    if end_date != -1:
+        end = datetime.datetime.fromtimestamp(end_date)
+        records.filter(Records.date >= end)
+    if limit != 0:
+        records.limit(limit)
+        if page != 0:
+            records.offset(limit * page)
+
+    records_list: dict = records.all()
+
+    db.session.commit()
+    return jsonify({
+        "msg": "Successful!",
+        "data": records_list
+    }), 200
+
+
 @record_blueprint.route('/modify_record', methods=['POST'])
 @login_required
 def modify_record():
@@ -104,6 +165,7 @@ def modify_record():
     @apiParam {String}  type         (可选)    出刀类型(normal:普通刀/last:尾刀/compensation:补偿刀)（不提供则不修改）
     @apiParam {String}  boss_gen     (可选)    boss周目（不提供则不修改）
     @apiParam {String}  boss_order   (可选)    第几个boss（不提供则不修改）
+    @apiDescription 只有出刀的人和管理员可以改刀。
 
 
     @apiSuccess (回参) {String}     msg   为"Successful!"
