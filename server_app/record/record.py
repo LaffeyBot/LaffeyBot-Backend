@@ -95,7 +95,7 @@ def add_record():
 @login_required
 def modify_record():
     """
-    @api {post} /v1/record/modify_record 出刀
+    @api {post} /v1/record/modify_record 改刀
     @apiVersion 1.0.0
     @apiName modify_record
     @apiGroup Records
