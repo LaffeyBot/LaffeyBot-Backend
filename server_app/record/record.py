@@ -89,3 +89,46 @@ def add_record():
         "record": added_record.__dict__,
         "group": group.__dict__
     }), 200
+
+
+@record_blueprint.route('/modify_record', methods=['POST'])
+@login_required
+def modify_record():
+    """
+    @api {post} /v1/record/modify_record 出刀
+    @apiVersion 1.0.0
+    @apiName modify_record
+    @apiGroup Records
+    @apiParam {String}  id           (必须)    需要更改的出刀ID
+    @apiParam {String}  damage       (可选)    新伤害（不提供则不修改）
+    @apiParam {String}  type         (可选)    出刀类型(normal:普通刀/last:尾刀/compensation:补偿刀)（不提供则不修改）
+    @apiParam {String}  boss_gen     (可选)    boss周目（不提供则不修改）
+    @apiParam {String}  boss_order   (可选)    第几个boss（不提供则不修改）
+
+
+    @apiSuccess (回参) {String}     msg   为"Successful!"
+    @apiSuccess (回参) {Dictionary} record  更新后的Record
+    @apiSuccess (回参) {Dictionary} group   更新后的当前公会信息，具体内容参照Groups表
+
+    @apiErrorExample {json} 未提供参数
+        HTTP/1.1 400 Bad Request
+        {"msg": "Parameter is missing", "code": 401}
+
+    @apiErrorExample {json} 用户没有加入公会
+        HTTP/1.1 403 Forbidden
+        {"msg": "User is not in any group.", "code": 402}
+
+    @apiErrorExample {json} 用户的公会不存在
+        HTTP/1.1 403 Forbidden
+        {"msg": "User's group not found.", "code": 403}
+
+    @apiErrorExample {json} 用户的公会没有相应用户
+        HTTP/1.1 403 Forbidden
+        {"msg": "Group doesn't have a user with this ID.", "code": 404}
+
+    @apiErrorExample {json} 用户没有权限修改
+        HTTP/1.1 403 Forbidden
+        {"msg": "Permission Denied", "code": 405}
+
+    """
+    pass
