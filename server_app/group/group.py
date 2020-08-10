@@ -25,7 +25,7 @@ def create_group():
 
     @apiParam {String}  group_name       (必须)    公会名
     @apiParam {String}  description      (必须)    公会介绍
-    @apiParam {String}  group_name       (必须)    是否强制出刀
+    @apiParam {String}  must_request       (必须)    是否强制出刀
     @apiParam {String}  group_chat_id    (可选)    公会群号
 
     @apiSuccess (回参) {String}                 msg     为"Successful!"

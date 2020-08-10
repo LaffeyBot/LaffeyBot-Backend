@@ -3,6 +3,7 @@ from functools import wraps
 import jwt
 from config import Config
 from data.model import *
+from config import Config
 from typing import Optional
 import pyotp
 import base64
@@ -14,7 +15,7 @@ def login_required(f):
         auth_header = request.headers.get('auth')
         try:
             decode_jwt = jwt.decode(auth_header,
-                                    current_app.secret_key,
+                                    Config.SECRET_KEY,
                                     algorithms=['HS256'],
                                     audience=Config.DOMAIN_NAME)
         except jwt.exceptions.InvalidTokenError:
