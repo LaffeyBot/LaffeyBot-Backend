@@ -1,5 +1,4 @@
-from flask import Blueprint, request, jsonify, g
-import jwt
+from flask import Blueprint, request, jsonify
 import datetime
 from server_app.auth_tools import is_username_exist, get_user_with, sign, verify_otp, is_email_exist
 import bcrypt

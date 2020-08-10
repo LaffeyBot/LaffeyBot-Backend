@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import datetime
-from server_app.auth_tools import is_username_exist
+from server_app.auth_tools import is_email_exist
 import bcrypt
 from server_app.email_tools import is_valid_email, send_email_to
 from server_app.auth_tools import generate_otp, verify_otp
@@ -37,6 +37,10 @@ def request_otp():
         HTTP/1.1 400 Bad Request
         {"msg": "Invalid email address.", "code": 501}
 
+    @apiErrorExample {json} 此邮箱没有关联任何账号
+            HTTP/1.1 404 Not Found
+            {"msg": "There is no account associated with this email.", "code": 103}
+
     """
     try:
         email_address: str = request.form['email_address']
@@ -51,6 +55,10 @@ def request_otp():
     email_content = '指挥官，\n'
     if for_ == 'sign-up':
         email_content += '    欢迎注册LaffeyBot！\n'
+    elif for_ == 'reset-password':
+        if not is_email_exist(email_address):
+            return jsonify({"msg": "There is no account associated with this email.", "code": 103}), 404
+        email_content += '  您正在重设密码。\n'
     email_content += '您的验证码为: ' + otp + '\n'
     email_content += '验证码五分钟内有效。祝指挥官使用愉快喵！'
     send_email_to(email_address, email_title, email_content)
