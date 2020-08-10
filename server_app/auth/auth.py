@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify, g
 import jwt
 import datetime
-from server_app.auth_tools import is_username_exist, get_user_with, sign, verify_otp
+from server_app.auth_tools import is_username_exist, get_user_with, sign, verify_otp, is_email_exist
 import bcrypt
 from config import Config
 from data.model import *
+from server_app.email_tools import is_valid_email
 
 auth_blueprint = Blueprint(
     "auth_v1",
@@ -30,7 +31,8 @@ def sign_up():
             username: "someuser",
             password: "12345678",
             email: "a@ddavid.net",
-            phone: "13312341234"
+            phone: "13312341234",
+            otp: "123123"
         }
 
     @apiSuccess (回参) {String} msg  为"Successful!"
@@ -57,6 +59,9 @@ def sign_up():
         HTTP/1.1 401 Unauthorized
         {"msg": "OTP is invalid.", "code": 104}
 
+    @apiErrorExample {json} 邮箱已存在
+        HTTP/1.1 400 Bad Request
+        {"msg": "Email Exists", "code": 105}
     """
     if not Config.REGISTER_ENABLED:
         return jsonify({"msg": "Register is not enabled."}), 400
@@ -74,8 +79,10 @@ def sign_up():
                         "code": 102}), 400
     if is_username_exist(username):
         return jsonify({"msg": "User Exists", "code": 103}), 403
+    if is_email_exist(email):
+        return jsonify({"msg": "Email Exists", "code": 105}), 403
     if not verify_otp(email, otp):
-        return jsonify({"msg": "OTP is invalid", "code": 104}), 401
+        return jsonify({"msg": "OTP is invalid", "code": 104}), 400
     new_user: Users = Users(group_id=-1,
                             username=username,
                             password=bcrypt.hashpw(password, bcrypt.gensalt()),
@@ -111,6 +118,7 @@ def login():
             username: "someuser",
             password: "12345678"
         }
+    @apiDescription 可以通过用户名，邮箱或手机号登录。登陆时只需要提供一项。
 
     @apiSuccess (回参) {String} msg  为"Successful!"
     @apiSuccess (回参) {String} jwt  jwt token，应当放入auth header
@@ -165,6 +173,61 @@ def login():
     }), 200
 
 
-@auth_blueprint.route('/forget_pwd')
-def forget_pwd():
-    pass
+@auth_blueprint.route('/forget_password')
+def forget_password():
+    """
+        @api {post} /v1/auth/forget_password 忘记密码
+        @apiVersion 1.0.0
+        @apiName forget_password
+        @apiGroup Users
+        @apiParam {String}  email           (必须)    邮箱
+        @apiParam {String}  otp             (必须)    邮箱验证码(请通过/v1/email/request_otp请求发送OTP)
+        @apiParam {String}  password        (必须)    新密码
+
+        @apiParamExample {json} Request-Example:
+            {
+                email: "example@example.com",
+                otp: "123123",
+                password: "password"
+            }
+
+        @apiSuccess (回参) {String} msg  为"Successful!"
+        @apiSuccess (回参) {String} id   用户id
+
+        @apiErrorExample {json} 未提供必要参数
+            HTTP/1.1 400 Bad Request
+            {"msg": "Missing parameter", "code": 101}
+
+        @apiErrorExample {json} 邮箱验证码错误
+            HTTP/1.1 401 Unauthorized
+            {"msg": "OTP is invalid.", "code": 104}
+
+        @apiErrorExample {json} email格式不正确
+            HTTP/1.1 400 Bad Request
+            {"msg": "Invalid email address.", "code": 501}
+
+        @apiErrorExample {json} 此邮箱没有关联任何账号
+            HTTP/1.1 404 Not Found
+            {"msg": "There is no account associated with this email.", "code": 103}
+
+        """
+    try:
+        otp = request.form['otp']
+        email = request.form['email']
+        password = request.form['password']
+    except KeyError:
+        return jsonify({"msg": "Missing parameter", "code": 101}), 400
+    if not is_valid_email(email):
+        return jsonify({"msg": "Invalid email address.", "code": 501}), 400
+
+    user = get_user_with(email=email)
+    if not is_email_exist(email) or not user:
+        return jsonify({"msg": "There is no account associated with this email.", "code": 103}), 404
+    if not verify_otp(email, otp):
+        return jsonify({"msg": "OTP is invalid", "code": 104}), 401
+
+    user.password = bcrypt.hashpw(password, bcrypt.gensalt())
+    db.session.commit()
+    return jsonify({
+        "msg": "Successful!"
+    }), 200

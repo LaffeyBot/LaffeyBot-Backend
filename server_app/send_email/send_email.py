@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import datetime
 from server_app.auth_tools import is_username_exist
 import bcrypt
-from .email_tools import is_valid_email, send_email_to
+from server_app.email_tools import is_valid_email, send_email_to
 from server_app.auth_tools import generate_otp, verify_otp
 
 email_blueprint = Blueprint(

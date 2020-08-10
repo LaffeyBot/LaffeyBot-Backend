@@ -71,6 +71,10 @@ def is_username_exist(username: str) -> bool:
     return get_user_with(username=username) is not None
 
 
+def is_email_exist(email: str) -> bool:
+    return get_user_with(email=email) is not None
+
+
 def generate_otp(identifier: str) -> str:
     secret = Config.SECRET_KEY + identifier
     secret_encoded = base64.b32encode(secret.encode())
