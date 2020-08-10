@@ -85,7 +85,7 @@ def sign_up():
         return jsonify({"msg": "OTP is invalid", "code": 104}), 400
     new_user: Users = Users(group_id=-1,
                             username=username,
-                            password=bcrypt.hashpw(password, bcrypt.gensalt()),
+                            password=bcrypt.hashpw(password.encode(), bcrypt.gensalt()),
                             nickname=nickname,
                             created_at=datetime.datetime.now(),
                             role=0,
@@ -96,6 +96,8 @@ def sign_up():
                             valid_since=datetime.datetime.now()
                             )
     db.session.add(new_user)
+    db.session.commit()
+    db.session.refresh(new_user)
     return jsonify({
         "msg": "Successful!",
         "id": new_user.id,

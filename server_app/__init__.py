@@ -5,20 +5,24 @@ import logging
 
 
 def create_app(config_file=config.Config):
+    app = Flask(__name__)
+    logging.basicConfig(filename='flask.log', level=logging.DEBUG)
+    app.config.from_object(config_file)
+    CORS(app)
+
+    from data.model import db
+    db.init_app(app)
+
     from .auth.auth import auth_blueprint
     from .group.group import group_blueprint
     from .record.record import record_blueprint
     from .send_email.send_email import email_blueprint
     # from app.connect_database import Connect
 
-    app = Flask(__name__)
-    logging.basicConfig(filename='flask.log', level=logging.DEBUG)
-    app.config.from_object(config_file)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(group_blueprint)
     app.register_blueprint(record_blueprint)
     app.register_blueprint(email_blueprint)
-    CORS(app)
 
     @app.route('/')
     def hello_world():

@@ -1,14 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask
+from flask import Flask, current_app
 import os
 from config import Config
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-db = SQLAlchemy(app)
+app = current_app
+db = SQLAlchemy()
 
 
 class Users(db.Model):
