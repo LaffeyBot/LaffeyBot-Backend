@@ -17,7 +17,7 @@ class Users(db.Model):
     # 公会ID，如果没有则为-1
     group_id = db.Column(db.Integer, nullable=False)
     # 用户名，不可修改，唯一
-    username = db.Column(db.Text, nullable=False, unique=True)
+    username = db.Column(db.VARCHAR(255), nullable=False, unique=True)
     # 显示名，应该与游戏名相符，可修改，不唯一
     nickname = db.Column(db.Text, nullable=False)
     # 身份，0为普通成员，1为管理员，2为会长

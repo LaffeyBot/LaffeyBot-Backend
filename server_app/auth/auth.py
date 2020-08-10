@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, g
 import jwt
 import datetime
-from server_app.auth_tools import is_username_exist, get_user_with, sign
+from server_app.auth_tools import is_username_exist, get_user_with, sign, verify_otp
 import bcrypt
 from config import Config
 from data.model import *
@@ -23,7 +23,7 @@ def sign_up():
     @apiParam {String}  username   (必须)    用户名（3字以上）
     @apiParam {String}  password   (必须)    密码（8字以上）
     @apiParam {String}  email      (必须)    邮箱
-    @apiParam {String}  otp        (必须)    邮箱验证码
+    @apiParam {String}  otp        (必须)    邮箱验证码(请通过/v1/email/request_otp请求发送OTP)
     @apiParam {String}  phone      (可选)    手机号
     @apiParamExample {json} Request-Example:
         {
@@ -53,13 +53,18 @@ def sign_up():
         HTTP/1.1 403 Forbidden
         {"msg": "User Exists", "code": 103}
 
+    @apiErrorExample {json} 邮箱验证码错误
+        HTTP/1.1 401 Unauthorized
+        {"msg": "OTP is invalid.", "code": 104}
+
     """
     if not Config.REGISTER_ENABLED:
         return jsonify({"msg": "Register is not enabled."}), 400
     try:
         username = request.form["username"]  # 要求3字以上
         password = request.form["password"]  # 要求8字以上
-        email = request.form.get('email', '')
+        otp = request.form['otp']
+        email = request.form['email']
         phone = request.form.get('phone', '')
         nickname = request.form.get('nickname', username)
     except KeyError:
@@ -69,6 +74,8 @@ def sign_up():
                         "code": 102}), 400
     if is_username_exist(username):
         return jsonify({"msg": "User Exists", "code": 103}), 403
+    if not verify_otp(email, otp):
+        return jsonify({"msg": "OTP is invalid", "code": 104}), 401
     new_user: Users = Users(group_id=-1,
                             username=username,
                             password=bcrypt.hashpw(password, bcrypt.gensalt()),
@@ -76,7 +83,7 @@ def sign_up():
                             created_at=datetime.datetime.now(),
                             role=0,
                             email=email,
-                            email_verified=False,
+                            email_verified=True,
                             phone=phone,
                             phone_verified=False,
                             valid_since=datetime.datetime.now()

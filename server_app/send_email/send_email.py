@@ -18,7 +18,7 @@ def request_otp():
     @api {post} /v1/email/request_otp 发一次性密码至邮箱
     @apiVersion 1.0.0
     @apiName request_email
-    @apiGroup Users
+    @apiGroup Emails
     @apiParam {String}  email_address   (必须)    邮箱
     @apiParam {String}  for             (可选)    用途（可选: sign-up/reset-password/others）
     @apiParamExample {json} Request-Example:
@@ -27,7 +27,7 @@ def request_otp():
         }
 
     @apiSuccess (回参) {String} msg  为"Successful!"
-    @apiDescription 每个OTP在两分钟内有效。
+    @apiDescription 每个OTP在五分钟内有效。
 
     @apiErrorExample {json} 未提供email或用途
         HTTP/1.1 400 Bad Request
@@ -66,7 +66,7 @@ def validate_otp():
     @api {post} /v1/email/validate_otp 验证一次性密码
     @apiVersion 1.0.0
     @apiName validate_otp
-    @apiGroup Users
+    @apiGroup Emails
     @apiParam {String}  email_address   (必须)    来源邮箱
     @apiParam {String}  otp             (必须)    一次性密码
     @apiParamExample {json} Request-Example:
@@ -76,7 +76,7 @@ def validate_otp():
         }
 
     @apiSuccess (回参) {Boolean} result  验证码是否有效
-    @apiDescription 每个OTP在两分钟内有效。
+    @apiDescription 每个OTP在五分钟内有效。
 
     @apiErrorExample {json} 未提供email或otp
         HTTP/1.1 400 Bad Request
