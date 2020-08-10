@@ -3,23 +3,21 @@ import config
 from flask_cors import CORS
 import logging
 
-import atexit
-
 
 def create_app(config_file=config.Config):
-    from app.view.view import view
-    from app.upload.upload import upload
-    from app.auth.auth import auth_blueprint
-    from app.ex_extension import extension
+    from .auth.auth import auth_blueprint
+    from .group.group import group_blueprint
+    from .record.record import record_blueprint
+    from .send_email.send_email import email_blueprint
     # from app.connect_database import Connect
 
     app = Flask(__name__)
     logging.basicConfig(filename='flask.log', level=logging.DEBUG)
     app.config.from_object(config_file)
-    app.register_blueprint(view)
-    app.register_blueprint(upload)
     app.register_blueprint(auth_blueprint)
-    app.register_blueprint(extension)
+    app.register_blueprint(group_blueprint)
+    app.register_blueprint(record_blueprint)
+    app.register_blueprint(email_blueprint)
     CORS(app)
 
     @app.route('/')

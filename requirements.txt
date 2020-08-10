@@ -6,3 +6,4 @@ Flask-Cors
 mypy
 bcrypt~=3.1.7
 Flask-SQLAlchemy
+pyotp~=2.4.0

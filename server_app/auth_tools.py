@@ -4,6 +4,8 @@ import jwt
 from config import Config
 from data.model import *
 from typing import Optional
+import pyotp
+import base64
 
 
 def login_required(f):
@@ -67,3 +69,17 @@ def verify_sing(signed: str) -> dict:
 
 def is_username_exist(username: str) -> bool:
     return get_user_with(username=username) is not None
+
+
+def generate_otp(identifier: str) -> str:
+    secret = Config.SECRET_KEY + identifier
+    secret_encoded = base64.b32encode(secret.encode())
+    otp = pyotp.TOTP(secret_encoded)
+    return otp.now()
+
+
+def verify_otp(identifier: str, passcode: str) -> bool:
+    secret = Config.SECRET_KEY + identifier
+    secret_encoded = base64.b32encode(secret.encode())
+    otp = pyotp.TOTP(secret_encoded)
+    return otp.verify(passcode, valid_window=Config.OTP_VALID_WINDOW)
