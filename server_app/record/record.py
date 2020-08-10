@@ -48,10 +48,12 @@ def add_record():
 
     """
     user: Users = g.user
-    damage = request.form.get('damage', None)
-    boss_gen = request.form.get('boss_gen', None)
-    boss_order = request.form.get('boss_order', None)
-    user_id = request.form.get('user_id', None)
+
+    json = request.get_json(force=True)
+    damage = json.get('damage', None)
+    boss_gen = json.get('boss_gen', None)
+    boss_order = json.get('boss_order', None)
+    user_id = json.get('user_id', None)
 
     if not damage:
         return jsonify({"msg": "Parameter is missing", "code": 401}), 400

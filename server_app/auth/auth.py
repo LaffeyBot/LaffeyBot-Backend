@@ -65,12 +65,13 @@ def sign_up():
     if not Config.REGISTER_ENABLED:
         return jsonify({"msg": "Register is not enabled."}), 400
     try:
-        username = request.form["username"]  # 要求3字以上
-        password = request.form["password"]  # 要求8字以上
-        otp = request.form['otp']
-        email = request.form['email']
-        phone = request.form.get('phone', '')
-        nickname = request.form.get('nickname', username)
+        json: dict = request.get_json(force=True)
+        username = json["username"]  # 要求3字以上
+        password = json["password"]  # 要求8字以上
+        otp = json['otp']
+        email = json['email']
+        phone = json.get('phone', '')
+        nickname = json.get('nickname', username)
     except KeyError:
         return jsonify({"msg": "Missing parameter", "code": 101}), 400
     if len(username) < 3 or len(password) < 8:
@@ -140,10 +141,11 @@ def login():
 
     """
     try:
-        username = request.form.get('username', None)
-        email = request.form.get('email', None)
-        phone = request.form.get('phone', None)
-        password: str = request.form["password"]
+        json: dict = request.get_json(force=True)
+        username = json.get('username', None)
+        email = json.get('email', None)
+        phone = json.get('phone', None)
+        password: str = json["password"]
     except KeyError:
         return jsonify({"msg": "Username or Password is missing", "code": 201}), 403
     user: Users = get_user_with(username=username)
@@ -211,9 +213,10 @@ def forget_password():
 
         """
     try:
-        otp = request.form['otp']
-        email = request.form['email']
-        password = request.form['password']
+        json: dict = request.get_json(force=True)
+        otp = json['otp']
+        email = json['email']
+        password = json['password']
     except KeyError:
         return jsonify({"msg": "Missing parameter", "code": 101}), 400
     if not is_valid_email(email):

@@ -45,7 +45,7 @@ class Groups(db.Model):
     __tablename__ = 'group'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
     # 群聊号，可以通过群聊号找到公会，也可以在公会找到群号，会长可修改
-    group_chat_id = db.Column(db.Integer, nullable=True)
+    group_chat_id = db.Column(db.Text, nullable=True)
     # 公会名，会长可修改
     name = db.Column(db.Text, nullable=False)
     # 公会介绍，会长/管理员可修改
@@ -59,7 +59,7 @@ class Groups(db.Model):
     # 剩余血量，每次公会战刷新
     boss_remaining_health = db.Column(db.Integer)
     # 必须申请出刀
-    must_request = db.Column(db.Boolean)
+    must_request = db.Column(db.Boolean, nullable=False)
 
     def __repr__(self):
         return '<group %r' % self.id

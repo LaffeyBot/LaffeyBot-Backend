@@ -19,7 +19,7 @@ def request_otp():
     @apiVersion 1.0.0
     @apiName request_email
     @apiGroup Emails
-    @apiParam {String}  email_address   (必须)    邮箱
+    @apiParam {String}  email   (必须)    邮箱
     @apiParam {String}  for             (可选)    用途（可选: sign-up/reset-password/others）
     @apiParamExample {json} Request-Example:
         {
@@ -43,9 +43,10 @@ def request_otp():
 
     """
     try:
-        email_address: str = request.form['email_address']
+        json: dict = request.get_json(force=True)
+        email_address: str = json['email']
         print(email_address)
-        for_: str = request.form.get('for', 'others')
+        for_: str = json.get('for', 'others')
     except KeyError:
         return jsonify({"msg": "Missing parameter", "code": 101}), 400
     if not is_valid_email(email_address):
@@ -75,7 +76,7 @@ def validate_otp():
     @apiVersion 1.0.0
     @apiName validate_otp
     @apiGroup Emails
-    @apiParam {String}  email_address   (必须)    来源邮箱
+    @apiParam {String}  email           (必须)    来源邮箱
     @apiParam {String}  otp             (必须)    一次性密码
     @apiParamExample {json} Request-Example:
         {
@@ -96,8 +97,9 @@ def validate_otp():
 
     """
     try:
-        email_address: str = request.form['email_address']
-        otp: str = request.form['otp']
+        json: dict = request.get_json(force=True)
+        email_address: str = json['email']
+        otp: str = json['otp']
     except KeyError:
         return jsonify({"msg": "Missing parameter", "code": 101}), 400
     if not is_valid_email(email_address):

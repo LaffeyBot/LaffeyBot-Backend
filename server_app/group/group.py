@@ -13,6 +13,78 @@ group_blueprint = Blueprint(
 )
 
 
+@group_blueprint.route('/create_group', methods=['GET'])
+@login_required
+def create_group():
+    """
+    @api {get} /v1/group/create_group 成立新公会
+
+    @apiVersion 1.0.0
+    @apiName create_group
+    @apiGroup Groups
+
+    @apiParam {String}  group_name       (必须)    公会名
+    @apiParam {String}  description      (必须)    公会介绍
+    @apiParam {String}  group_name       (必须)    是否强制出刀
+    @apiParam {String}  group_chat_id    (可选)    公会群号
+
+    @apiSuccess (回参) {String}                 msg     为"Successful!"
+    @apiSuccess (回参) {List[Dictionary]}       data    成立的公会信息，具体内容参照Groups表
+
+    @apiSuccessExample {json} 成功样例
+        HTTP/1.1 200 OK
+        {
+            "msg": "Successful!",
+            "data": [
+                {
+                    "group_name": "美食殿",
+                    "group_chat_id": 123123123,
+                    "description": "みんなで楽しく食事をするギルド。その名も、美食殿！",
+                    "must_request": False
+                },
+                ...
+            ]
+        }
+
+    @apiErrorExample {json} 用户已经在一个公会里了
+        HTTP/1.1 403 Forbidden
+        {"msg": "User is already in a group.", "code": 410}
+
+    @apiErrorExample {json} 未提供必要参数
+        HTTP/1.1 400 Bad Request
+        {"msg": "Missing parameter", "code": 101}
+
+    """
+    user: Users = g.user
+    if g.user.group_id != -1:
+        return jsonify({"msg": "User is already in a group.", "code": 410}), 403
+
+    try:
+        json: dict = request.get_json(force=True)
+        group_name = json['group_name']
+        group_chat_id = json.get('group_chat_id', '')
+        description = json.get('description', '')
+        must_request: bool = json['must_request']
+    except KeyError:
+        return jsonify({"msg": "Missing parameter", "code": 101}), 400
+
+    new_group = Groups(group_chat_id=group_chat_id,
+                       name=group_name,
+                       description=description,
+                       owner_id=user.id,
+                       current_boss_gen=1,
+                       current_boss_order=1,
+                       boss_remaining_health=Config.BOSS_HEALTH[0],
+                       must_request=must_request)
+    db.session.add(new_group)
+    db.session.commit()
+
+    return jsonify({
+        "msg": "Successful!",
+        "data": new_group.__dict__
+    }), 200
+
+
 @group_blueprint.route('/get_members', methods=['GET'])
 @login_required
 def get_members():
@@ -112,7 +184,7 @@ def kick_member():
         {"msg": "Invalid ID", "code": 405}
 
     """
-    id_: int = request.form.get('id', None)
+    id_: int = request.get_json().get('id', None)
     if not id_:
         return jsonify({"msg": "ID is missing.", "code": 201}), 400
 
