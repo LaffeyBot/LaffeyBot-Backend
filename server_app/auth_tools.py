@@ -1,12 +1,12 @@
-from flask import request, current_app, jsonify, g
+from flask import request, jsonify, g
 from functools import wraps
 import jwt
 from config import Config
 from data.model import *
-from config import Config
 from typing import Optional
 import pyotp
 import base64
+import time
 
 
 def login_required(f):
@@ -23,7 +23,7 @@ def login_required(f):
         user: Users = get_user_with(id_=decode_jwt.get("sub"))
         if user is None:
             return jsonify({"msg": "Can not find user data"}), 403
-        if decode_jwt["iat"] < user.valid_since.timestamp():
+        if decode_jwt["iat"] < time.mktime(user.valid_since.timetuple()):
             return jsonify({"msg": "This session has been revoked", "code": 302}), 403
         g.user = user
         return f(*args, **kwargs)

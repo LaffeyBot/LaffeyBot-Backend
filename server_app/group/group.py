@@ -5,6 +5,7 @@ from typing import List
 from server_app.auth_tools import login_required
 from data.model import *
 from server_app.group_tools import get_group_of_user
+from data.alchemy_encoder import AlchemyEncoder
 
 group_blueprint = Blueprint(
     "group_v1",
@@ -13,11 +14,11 @@ group_blueprint = Blueprint(
 )
 
 
-@group_blueprint.route('/create_group', methods=['GET'])
+@group_blueprint.route('/create_group', methods=['POST'])
 @login_required
 def create_group():
     """
-    @api {get} /v1/group/create_group 成立新公会
+    @api {post} /v1/group/create_group 成立新公会
 
     @apiVersion 1.0.0
     @apiName create_group
@@ -78,10 +79,14 @@ def create_group():
                        must_request=must_request)
     db.session.add(new_group)
     db.session.commit()
+    db.session.refresh(new_group)
+    user.group_id = new_group.id
+    user.role = 2  # 玩家成爲會長
+    db.session.commit()
 
     return jsonify({
         "msg": "Successful!",
-        "data": new_group.__dict__
+        "data": AlchemyEncoder().default(new_group)
     }), 200
 
 

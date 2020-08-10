@@ -4,6 +4,8 @@ from ..auth_tools import login_required
 from data.model import *
 from ..group_tools import get_group_of_user
 from .record_tools import damage_to_score, subtract_damage_from_group
+from data.alchemy_encoder import AlchemyEncoder
+import json as js
 
 record_blueprint = Blueprint(
     "record_v1",
@@ -51,11 +53,12 @@ def add_record():
 
     json = request.get_json(force=True)
     damage = json.get('damage', None)
+    type_ = json.get('type', None)
     boss_gen = json.get('boss_gen', None)
     boss_order = json.get('boss_order', None)
     user_id = json.get('user_id', None)
 
-    if not damage:
+    if not damage or not type_:
         return jsonify({"msg": "Parameter is missing", "code": 401}), 400
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
@@ -77,20 +80,24 @@ def add_record():
     added_record: Records = Records(group_id=user.group_id,
                                     boss_gen=boss_gen,
                                     boss_order=boss_order,
-                                    damage=damage,
+                                    damage=int(damage),
                                     user_id=user.id,
                                     nickname=user.nickname,
-                                    date=datetime.datetime.now())
+                                    date=datetime.datetime.now(),
+                                    type=type_)
     added_record.score = damage_to_score(record=added_record)
     subtract_damage_from_group(record=added_record, group=group)
     db.session.add(added_record)
 
     db.session.commit()
-    return jsonify({
+    db.session.refresh(added_record)
+    db.session.refresh(group)
+    return_data = {
         "msg": "Successful!",
-        "record": added_record.__dict__,
-        "group": group.__dict__
-    }), 200
+        "record": added_record,
+        "group": group
+    }
+    return js.dumps(return_data, cls=AlchemyEncoder), 200
 
 
 @record_blueprint.route('/get_records', methods=['GET'])
@@ -148,10 +155,10 @@ def get_records():
     records_list: dict = records.all()
 
     db.session.commit()
-    return jsonify({
+    return js.dumps({
         "msg": "Successful!",
         "data": records_list
-    }), 200
+    }, cls=AlchemyEncoder), 200
 
 
 @record_blueprint.route('/modify_record', methods=['POST'])

@@ -32,7 +32,7 @@ class Users(db.Model):
     # 手机号已验证
     phone_verified = db.Column(db.Boolean, nullable=False)
     # 在此日期之前的 token 都会失效（比如更改密码时之类的）
-    valid_since = db.Column(db.Text, nullable=False)
+    valid_since = db.Column(db.Date, nullable=False)
 
     def __repr__(self):
         return '<users %r' % self.id
@@ -80,7 +80,7 @@ class Records(db.Model):
     # 游戏名，用于显示
     nickname = db.Column(db.Text, nullable=False)
     # 出刀时间
-    date = db.Column(db.Date, nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
     # 出刀类型，normal：普通刀，last：尾刀，compensation：尾刀
     type = db.Column(db.Text, nullable=False)
 
