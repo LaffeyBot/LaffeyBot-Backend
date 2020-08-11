@@ -5,3 +5,6 @@ group_blueprint = Blueprint(
     __name__,
     url_prefix='/v1/group'
 )
+
+from .group import *
+from .invite import *

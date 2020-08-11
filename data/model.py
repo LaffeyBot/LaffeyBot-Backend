@@ -32,7 +32,7 @@ class Users(db.Model):
     # 在此日期之前的 token 都会失效（比如更改密码时之类的）
     valid_since = db.Column(db.Date, nullable=False)
     # 外键关联Groups
-    group_id = db.Column(db.Integer,db.ForeignKey('group.id'),nullable=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=True)
     # 方便关联查询
     group = db.relationship('Groups',backref='users')
 
@@ -50,7 +50,7 @@ class Groups(db.Model):
     # 公会介绍，会长/管理员可修改
     description = db.Column(db.Text, nullable=False)
     # 公会所有人
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    owner_id = db.Column(db.Integer, nullable=False)
     # 当前Boss代目，每次公会战刷新
     current_boss_gen = db.Column(db.Integer)
     # 当前是第几个Boss，每次公会战刷新
@@ -61,7 +61,7 @@ class Groups(db.Model):
     must_request = db.Column(db.Boolean, nullable=False)
 
     def __repr__(self):
-        return '<group %r' % self.id
+        return '<groups %r' % self.id
 
 
 class Records(db.Model):
@@ -70,7 +70,7 @@ class Records(db.Model):
     # 对应的 Group ID
     group_id = db.Column(db.Integer, db.ForeignKey('groups.id'))
     # 对应的 Group Object
-    group = db.relationship('Groups', backref=db.backref('records'))
+    group = db.relationship('Groups', backref=db.backref('records', lazy='dynamic'))
     # 这是 # 代目
     boss_gen = db.Column(db.Integer, nullable=False)
     # 这是 # 王
@@ -80,9 +80,9 @@ class Records(db.Model):
     # 积分，根据以上信息自动生成
     score = db.Column(db.Integer, nullable=False)
     # 用户ID
-    user_id = db.Column(db.Integer, db.ForeignKey('groups.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     # 对应的 User Object
-    user = db.relationship('Users', backref=db.backref('records'))
+    user = db.relationship('Users', backref=db.backref('records', lazy='dynamic'))
     # 游戏名，用于显示
     nickname = db.Column(db.Text, nullable=False)
     # 出刀时间
@@ -106,4 +106,4 @@ class RequestsAndInvites(db.Model):
     type = db.Column(db.Text, nullable=False)
 
     def __repr__(self):
-        return '<career_fair %r' % self.id
+        return '<requests_and_invites %r' % self.id
