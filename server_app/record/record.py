@@ -58,7 +58,7 @@ def add_record():
     if user.group_id is None:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
 
-    group: Groups = user.group_in
+    group: Groups = user.group
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 403
 
@@ -123,30 +123,30 @@ def get_records():
 
     """
     user: Users = g.user
-    limit = request.args.get('limit', 0)
-    page = request.args.get('page', 0)
-    start_date: int = request.args.get('start_date', -1)
-    end_date: int = request.args.get('end_date', -1)
+    limit: str = request.args.get('limit', '')
+    page: str = request.args.get('page', '')
+    start_date: str = request.args.get('start_date', '')
+    end_date: str = request.args.get('end_date', '')
 
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
 
-    group: Groups = get_group_of_user()
+    group: Groups = user.group
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 403
 
     records = group.records
     print(records)
-    if start_date != -1:
-        start = datetime.datetime.fromtimestamp(start_date)
-        records.filter(Records.date <= start)
-    if end_date != -1:
-        end = datetime.datetime.fromtimestamp(end_date)
-        records.filter(Records.date >= end)
-    if limit != 0:
-        records.limit(limit)
-        if page != 0:
-            records.offset(limit * page)
+    if start_date.isdigit() and start_date != -1:
+        start = datetime.datetime.fromtimestamp(int(start_date))
+        records = records.filter(Records.date >= start)
+    if end_date.isdigit() and end_date != -1:
+        end = datetime.datetime.fromtimestamp(int(end_date))
+        records = records.filter(Records.date <= end)
+    if limit.isdigit() and limit != 0:
+        records = records.limit(int(limit))
+        if page.isdigit() and page != 0:
+            records = records.offset(int(limit) * int(page))
 
     records_list: dict = records.all()
 

@@ -5,3 +5,5 @@ record_blueprint = Blueprint(
     __name__,
     url_prefix='/v1/record'
 )
+
+from .record import *

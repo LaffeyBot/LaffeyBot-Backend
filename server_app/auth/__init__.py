@@ -5,3 +5,5 @@ auth_blueprint = Blueprint(
     __name__,
     url_prefix='/v1/auth'
 )
+
+from .auth import *

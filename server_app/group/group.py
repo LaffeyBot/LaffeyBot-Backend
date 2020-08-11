@@ -52,7 +52,7 @@ def create_group():
 
     """
     user: Users = g.user
-    if g.user.group_id != -1:
+    if user.group_id:
         return jsonify({"msg": "User is already in a group.", "code": 410}), 403
 
     try:
@@ -126,11 +126,11 @@ def get_members():
     if user.group_id is None:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
 
-    group: Groups = user.group_in
+    group: Groups = user.group
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 404
 
-    members: List[Users] = Users.query.filter_by(group_id=group.id).all()
+    members: List[Users] = group.users
     data_list: List[dict] = list()
     for member in members:
         data_dict = dict(id=member.id,

@@ -5,3 +5,5 @@ email_blueprint = Blueprint(
     __name__,
     url_prefix='/v1/email'
 )
+
+from .send_email import *
