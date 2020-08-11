@@ -7,3 +7,4 @@ group_blueprint = Blueprint(
 )
 
 from .group import *
+from .invite import *
