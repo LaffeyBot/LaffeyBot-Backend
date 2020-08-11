@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, g
+from flask import request, jsonify, g
 
 from typing import List
 
@@ -6,12 +6,7 @@ from server_app.auth_tools import login_required
 from data.model import *
 from server_app.group_tools import get_group_of_user
 from data.alchemy_encoder import AlchemyEncoder
-
-group_blueprint = Blueprint(
-    "group_v1",
-    __name__,
-    url_prefix='/v1/group'
-)
+from . import group_blueprint
 
 
 @group_blueprint.route('/create_group', methods=['POST'])

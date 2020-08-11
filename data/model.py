@@ -86,3 +86,18 @@ class Records(db.Model):
 
     def __repr__(self):
         return '<records %r' % self.id
+
+
+# 存放入会申请和邀请的地方
+class RequestsAndInvites(db.Model):
+    __tablename__ = 'requests_and_invites'
+    id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
+    # 公会ID
+    group_id = db.Column(db.Integer, nullable=False)
+    # 玩家ID
+    user_id = db.Column(db.Integer, nullable=False)
+    # 类型：request=玩家申请加入某公会，invite=公会管理邀请玩家加入某公会
+    type = db.Column(db.Text, nullable=False)
+
+    def __repr__(self):
+        return '<career_fair %r' % self.id

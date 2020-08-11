@@ -5,12 +5,9 @@ import bcrypt
 from config import Config
 from data.model import *
 from server_app.email_tools import is_valid_email
+from . import auth_blueprint
 
-auth_blueprint = Blueprint(
-    "auth_v1",
-    __name__,
-    url_prefix='/v1/auth'
-)
+
 
 
 @auth_blueprint.route('/sign_up', methods=['POST'])
