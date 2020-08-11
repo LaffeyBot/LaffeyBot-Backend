@@ -13,11 +13,10 @@ def create_app(config_file=config.Config):
     from data.model import db
     db.init_app(app)
 
-    from .auth.auth import auth_blueprint
-    from .group.group import group_blueprint
-    from .record.record import record_blueprint
-    from .send_email.send_email import email_blueprint
-    # from app.connect_database import Connect
+    from .auth import auth_blueprint
+    from .group import group_blueprint
+    from .record import record_blueprint
+    from .send_email import email_blueprint
 
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(group_blueprint)

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, g
+from flask import request, jsonify, g
 import datetime
 from ..auth_tools import login_required
 from data.model import *
@@ -6,12 +6,7 @@ from ..group_tools import get_group_of_user
 from .record_tools import damage_to_score, subtract_damage_from_group
 from data.alchemy_encoder import AlchemyEncoder
 import json as js
-
-record_blueprint = Blueprint(
-    "record_v1",
-    __name__,
-    url_prefix='/v1/record'
-)
+from . import record_blueprint
 
 
 @record_blueprint.route('/add_record', methods=['POST'])
