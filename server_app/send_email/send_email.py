@@ -16,7 +16,7 @@ def request_otp():
     @apiParam {String}  for             (可选)    用途（可选: sign-up/reset-password/others）
     @apiParamExample {json} Request-Example:
         {
-            email_address: "example@example.com"
+            "email_address": "example@example.com"
         }
 
     @apiSuccess (回参) {String} msg  为"Successful!"
@@ -73,8 +73,8 @@ def validate_otp():
     @apiParam {String}  otp             (必须)    一次性密码
     @apiParamExample {json} Request-Example:
         {
-            email_address: "example@example.com",
-            otp: "234324"
+            "email_address": "example@example.com",
+            "otp": "234324"
         }
 
     @apiSuccess (回参) {Boolean} result  验证码是否有效

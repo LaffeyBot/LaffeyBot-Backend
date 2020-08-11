@@ -1,7 +1,5 @@
 from flask import request, jsonify, g
-
 from typing import List
-
 from server_app.auth_tools import login_required
 from data.model import *
 from server_app.group_tools import get_group_of_user

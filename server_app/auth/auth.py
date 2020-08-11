@@ -22,11 +22,11 @@ def sign_up():
     @apiParam {String}  phone      (可选)    手机号
     @apiParamExample {json} Request-Example:
         {
-            username: "someuser",
-            password: "12345678",
-            email: "a@ddavid.net",
-            phone: "13312341234",
-            otp: "123123"
+            "username": "someuser",
+            "password": "12345678",
+            "email": "a@ddavid.net",
+            "phone": "13312341234",
+            "otp": "123123"
         }
 
     @apiSuccess (回参) {String} msg  为"Successful!"
@@ -111,8 +111,8 @@ def login():
     @apiParam {String}  password   (必须)    密码
     @apiParamExample {json} Request-Example:
         {
-            username: "someuser",
-            password: "12345678"
+            "username": "someuser",
+            "password": "12345678"
         }
     @apiDescription 可以通过用户名，邮箱或手机号登录。登陆时只需要提供一项。
 
@@ -183,9 +183,9 @@ def forget_password():
 
         @apiParamExample {json} Request-Example:
             {
-                email: "example@example.com",
-                otp: "123123",
-                password: "password"
+                "email": "example@example.com",
+                "otp": "123123",
+                "password": "password"
             }
 
         @apiSuccess (回参) {String} msg  为"Successful!"
