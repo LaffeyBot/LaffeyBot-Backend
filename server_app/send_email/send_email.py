@@ -1,15 +1,8 @@
-from flask import Blueprint, request, jsonify
-import datetime
+from flask import request, jsonify
 from server_app.auth_tools import is_email_exist
-import bcrypt
 from server_app.email_tools import is_valid_email, send_email_to
 from server_app.auth_tools import generate_otp, verify_otp
-
-email_blueprint = Blueprint(
-    "email_v1",
-    __name__,
-    url_prefix='/v1/email'
-)
+from . import email_blueprint
 
 
 @email_blueprint.route('/request_otp', methods=['POST'])

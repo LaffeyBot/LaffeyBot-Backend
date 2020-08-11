@@ -1,16 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import request, jsonify
 import datetime
 from server_app.auth_tools import is_username_exist, get_user_with, sign, verify_otp, is_email_exist
 import bcrypt
 from config import Config
 from data.model import *
 from server_app.email_tools import is_valid_email
-
-auth_blueprint = Blueprint(
-    "auth_v1",
-    __name__,
-    url_prefix='/v1/auth'
-)
+from . import auth_blueprint
 
 
 @auth_blueprint.route('/sign_up', methods=['POST'])
@@ -83,8 +78,7 @@ def sign_up():
         return jsonify({"msg": "Email Exists", "code": 105}), 403
     if not verify_otp(email, otp):
         return jsonify({"msg": "OTP is invalid", "code": 104}), 400
-    new_user: Users = Users(group_id=-1,
-                            username=username,
+    new_user: Users = Users(username=username,
                             password=bcrypt.hashpw(password.encode(), bcrypt.gensalt()),
                             nickname=nickname,
                             created_at=datetime.datetime.now(),

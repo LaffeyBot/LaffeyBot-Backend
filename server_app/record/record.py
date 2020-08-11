@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, g
+from flask import request, jsonify, g
 import datetime
 from ..auth_tools import login_required
 from data.model import *
@@ -6,12 +6,7 @@ from ..group_tools import get_group_of_user
 from .record_tools import damage_to_score, subtract_damage_from_group
 from data.alchemy_encoder import AlchemyEncoder
 import json as js
-
-record_blueprint = Blueprint(
-    "record_v1",
-    __name__,
-    url_prefix='/v1/record'
-)
+from . import record_blueprint
 
 
 @record_blueprint.route('/add_record', methods=['POST'])
@@ -60,10 +55,10 @@ def add_record():
 
     if not damage or not type_:
         return jsonify({"msg": "Parameter is missing", "code": 401}), 400
-    if user.group_id == -1:
+    if user.group_id is None:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
 
-    group: Groups = get_group_of_user()
+    group: Groups = user.group_in
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 403
 
@@ -140,7 +135,8 @@ def get_records():
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 403
 
-    records = db.session.query(Records).filter(Records.group_id == user.group_id)
+    records = group.records
+    print(records)
     if start_date != -1:
         start = datetime.datetime.fromtimestamp(start_date)
         records.filter(Records.date <= start)

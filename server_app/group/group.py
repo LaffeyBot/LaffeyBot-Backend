@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, g
+from flask import request, jsonify, g
 
 from typing import List
 
@@ -6,12 +6,7 @@ from server_app.auth_tools import login_required
 from data.model import *
 from server_app.group_tools import get_group_of_user
 from data.alchemy_encoder import AlchemyEncoder
-
-group_blueprint = Blueprint(
-    "group_v1",
-    __name__,
-    url_prefix='/v1/group'
-)
+from . import group_blueprint
 
 
 @group_blueprint.route('/create_group', methods=['POST'])
@@ -127,10 +122,11 @@ def get_members():
         {"msg": "User's group not found.", "code": 403}
 
     """
-    if g.user.group_id == -1:
+    user: Users = g.user
+    if user.group_id is None:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
 
-    group = get_group_of_user()
+    group: Groups = user.group_in
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 404
 
