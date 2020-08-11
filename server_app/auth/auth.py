@@ -78,8 +78,7 @@ def sign_up():
         return jsonify({"msg": "Email Exists", "code": 105}), 403
     if not verify_otp(email, otp):
         return jsonify({"msg": "OTP is invalid", "code": 104}), 400
-    new_user: Users = Users(group_id=-1,
-                            username=username,
+    new_user: Users = Users(username=username,
                             password=bcrypt.hashpw(password.encode(), bcrypt.gensalt()),
                             nickname=nickname,
                             created_at=datetime.datetime.now(),

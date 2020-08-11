@@ -55,10 +55,10 @@ def add_record():
 
     if not damage or not type_:
         return jsonify({"msg": "Parameter is missing", "code": 401}), 400
-    if user.group_id == -1:
+    if user.group_id is None:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
 
-    group: Groups = get_group_of_user()
+    group: Groups = user.group_in
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 403
 
@@ -72,14 +72,14 @@ def add_record():
     if not boss_order:
         boss_order = group.current_boss_order
 
-    added_record: CareerFair = CareerFair(group_id=user.group_id,
-                                          boss_gen=boss_gen,
-                                          boss_order=boss_order,
-                                          damage=int(damage),
-                                          user_id=user.id,
-                                          nickname=user.nickname,
-                                          date=datetime.datetime.now(),
-                                          type=type_)
+    added_record: Records = Records(group_id=user.group_id,
+                                    boss_gen=boss_gen,
+                                    boss_order=boss_order,
+                                    damage=int(damage),
+                                    user_id=user.id,
+                                    nickname=user.nickname,
+                                    date=datetime.datetime.now(),
+                                    type=type_)
     added_record.score = damage_to_score(record=added_record)
     subtract_damage_from_group(record=added_record, group=group)
     db.session.add(added_record)
@@ -135,13 +135,14 @@ def get_records():
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 403
 
-    records = db.session.query(CareerFair).filter(CareerFair.group_id == user.group_id)
+    records = group.records
+    print(records)
     if start_date != -1:
         start = datetime.datetime.fromtimestamp(start_date)
-        records.filter(CareerFair.date <= start)
+        records.filter(Records.date <= start)
     if end_date != -1:
         end = datetime.datetime.fromtimestamp(end_date)
-        records.filter(CareerFair.date >= end)
+        records.filter(Records.date >= end)
     if limit != 0:
         records.limit(limit)
         if page != 0:

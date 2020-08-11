@@ -122,10 +122,11 @@ def get_members():
         {"msg": "User's group not found.", "code": 403}
 
     """
-    if g.user.group_id == -1:
+    user: Users = g.user
+    if user.group_id is None:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
 
-    group = get_group_of_user()
+    group: Groups = user.group_in
     if not group:
         return jsonify({"msg": "User's group not found.", "code": 403}), 404
 
