@@ -19,12 +19,12 @@ def login_required(f):
                                     algorithms=['HS256'],
                                     audience=Config.DOMAIN_NAME)
         except jwt.exceptions.InvalidTokenError:
-            return jsonify({"msg": "Auth sign does not verify", "code": 301}), 401
+            return jsonify({"msg": "Auth sign does not verify"}), 401
         user: Users = get_user_with(id_=decode_jwt.get("sub"))
         if user is None:
-            return jsonify({"msg": "Can not find user data"}), 403
+            return jsonify({"msg": "Can not find user data"}), 401
         if decode_jwt["iat"] < time.mktime(user.valid_since.timetuple()):
-            return jsonify({"msg": "This session has been revoked", "code": 302}), 403
+            return jsonify({"msg": "This session has been revoked"}), 401
         g.user = user
         return f(*args, **kwargs)
 

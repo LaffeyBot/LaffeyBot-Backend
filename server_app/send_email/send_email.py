@@ -12,7 +12,7 @@ def request_otp():
     @apiVersion 1.0.0
     @apiName request_email
     @apiGroup Emails
-    @apiParam {String}  email   (必须)    邮箱
+    @apiParam {String}  email           (必须)    邮箱
     @apiParam {String}  for             (可选)    用途（可选: sign-up/reset-password/others）
     @apiParamExample {json} Request-Example:
         {
@@ -24,15 +24,15 @@ def request_otp():
 
     @apiErrorExample {json} 未提供email或用途
         HTTP/1.1 400 Bad Request
-        {"msg": "Missing parameter", "code": 101}
+        {"msg": "Missing parameter"}
 
     @apiErrorExample {json} email格式不正确
-        HTTP/1.1 400 Bad Request
-        {"msg": "Invalid email address.", "code": 501}
+        HTTP/1.1 406 Not Acceptable
+        {"msg": "Invalid email address."}
 
     @apiErrorExample {json} 此邮箱没有关联任何账号
-            HTTP/1.1 404 Not Found
-            {"msg": "There is no account associated with this email.", "code": 103}
+            HTTP/1.1 417 Expectation Failed
+            {"msg": "There is no account associated with this email."}
 
     """
     try:
@@ -43,7 +43,7 @@ def request_otp():
     except KeyError:
         return jsonify({"msg": "Missing parameter", "code": 101}), 400
     if not is_valid_email(email_address):
-        return jsonify({"msg": "Invalid email address.", "code": 501}), 400
+        return jsonify({"msg": "Invalid email address."}), 406
     otp = generate_otp(email_address)
     email_title = '[Laffeybot] 您的验证码 / Your One-time Passcode'
     email_content = '指挥官，\n'
@@ -51,7 +51,7 @@ def request_otp():
         email_content += '    欢迎注册LaffeyBot！\n'
     elif for_ == 'reset-password':
         if not is_email_exist(email_address):
-            return jsonify({"msg": "There is no account associated with this email.", "code": 103}), 404
+            return jsonify({"msg": "There is no account associated with this email."}), 417
         email_content += '  您正在重设密码。\n'
     email_content += '您的验证码为: ' + otp + '\n'
     email_content += '验证码五分钟内有效。祝指挥官使用愉快喵！'
@@ -82,11 +82,11 @@ def validate_otp():
 
     @apiErrorExample {json} 未提供email或otp
         HTTP/1.1 400 Bad Request
-        {"msg": "Missing parameter", "code": 101}
+        {"msg": "Missing parameter"}
 
     @apiErrorExample {json} email格式不正确
-        HTTP/1.1 400 Bad Request
-        {"msg": "Invalid email address.", "code": 501}
+        HTTP/1.1 406 Not Acceptable
+        {"msg": "Invalid email address."}
 
     """
     try:
@@ -94,9 +94,9 @@ def validate_otp():
         email_address: str = json['email']
         otp: str = json['otp']
     except KeyError:
-        return jsonify({"msg": "Missing parameter", "code": 101}), 400
+        return jsonify({"msg": "Missing parameter"}), 400
     if not is_valid_email(email_address):
-        return jsonify({"msg": "Invalid email address.", "code": 501}), 400
+        return jsonify({"msg": "Invalid email address."}), 406
     otp_is_valid: bool = verify_otp(email_address, otp)
 
     return jsonify({

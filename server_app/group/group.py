@@ -41,17 +41,17 @@ def create_group():
         }
 
     @apiErrorExample {json} 用户已经在一个公会里了
-        HTTP/1.1 403 Forbidden
-        {"msg": "User is already in a group.", "code": 410}
+        HTTP/1.1 412 Precondition Failed
+        {"msg": "User is already in a group."}
 
     @apiErrorExample {json} 未提供必要参数
         HTTP/1.1 400 Bad Request
-        {"msg": "Missing parameter", "code": 101}
+        {"msg": "Missing parameter"}
 
     """
     user: Users = g.user
     if user.group_id:
-        return jsonify({"msg": "User is already in a group.", "code": 410}), 403
+        return jsonify({"msg": "User is already in a group."}), 412
 
     try:
         json: dict = request.get_json(force=True)
@@ -113,20 +113,20 @@ def get_members():
 
     @apiErrorExample {json} 用户没有加入公会
         HTTP/1.1 403 Forbidden
-        {"msg": "User is not in any group.", "code": 402}
+        {"msg": "User is not in any group."}
 
     @apiErrorExample {json} 用户的公会不存在
-        HTTP/1.1 404 Not Found
-        {"msg": "User's group not found.", "code": 403}
+        HTTP/1.1 417 Expectation Failed
+        {"msg": "User's group not found."}
 
     """
     user: Users = g.user
     if user.group_id is None:
-        return jsonify({"msg": "User is not in any group.", "code": 402}), 403
+        return jsonify({"msg": "User is not in any group."}), 403
 
     group: Groups = user.group
     if not group:
-        return jsonify({"msg": "User's group not found.", "code": 403}), 404
+        return jsonify({"msg": "User's group not found."}), 417
 
     members: List[Users] = group.users
     data_list: List[dict] = list()
@@ -164,19 +164,19 @@ def kick_member():
 
     @apiErrorExample {json} 未提供ID
         HTTP/1.1 400 Bad Request
-        {"msg": "ID is missing.", "code": 201}
+        {"msg": "ID is missing."}
 
     @apiErrorExample {json} 用户没有加入公会
-        HTTP/1.1 403 Forbidden
-        {"msg": "User is not in any group.", "code": 402}
+        HTTP/1.1 406 Not Acceptable
+        {"msg": "User is not in any group."}
 
     @apiErrorExample {json} 用户的公会不存在
-        HTTP/1.1 403 Forbidden
-        {"msg": "User's group not found.", "code": 403}
+        HTTP/1.1 417 Expectation Failed
+        {"msg": "User's group not found."}
 
     @apiErrorExample {json} 用户不是会长
         HTTP/1.1 403 Forbidden
-        {"msg": "Permission Denied", "code": 404}
+        {"msg": "Permission Denied"}
 
     @apiErrorExample {json} 被踢出的成员不存在
         HTTP/1.1 204 No Content
@@ -189,18 +189,18 @@ def kick_member():
 
     user: Users = g.user
     if user.group_id == -1:
-        return jsonify({"msg": "User is not in any group.", "code": 402}), 403
+        return jsonify({"msg": "User is not in any group."}), 403
 
     group = get_group_of_user()
     if not group:
-        return jsonify({"msg": "User's group not found.", "code": 403}), 403
+        return jsonify({"msg": "User's group not found."}), 417
 
     if user.role < 2 or group.owner_id != user.id:
-        return jsonify({"msg": "Permission Denied", "code": 404}), 403
+        return jsonify({"msg": "Permission Denied"}), 403
 
     user_to_be_kicked: Users = Users.query.filter_by(group_id=group.id, id=user.id).first()
     if not user_to_be_kicked:
-        return jsonify({"msg": "Invalid ID", "code": 405}), 204
+        return jsonify({"msg": "Invalid ID"}), 204
     user_to_be_kicked.group_id = -1
     db.session.commit()
 

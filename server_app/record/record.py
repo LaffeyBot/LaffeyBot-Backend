@@ -29,19 +29,19 @@ def add_record():
 
     @apiErrorExample {json} 参数不存在
         HTTP/1.1 400 Bad Request
-        {"msg": "Parameter is missing", "code": 401}
+        {"msg": "Parameter is missing"}
 
     @apiErrorExample {json} 用户没有加入公会
         HTTP/1.1 403 Forbidden
-        {"msg": "User is not in any group.", "code": 402}
+        {"msg": "User is not in any group."}
 
     @apiErrorExample {json} 用户的公会不存在
-        HTTP/1.1 403 Forbidden
-        {"msg": "User's group not found.", "code": 403}
+        HTTP/1.1 417 Expectation Failed
+        {"msg": "User's group not found."}
 
     @apiErrorExample {json} 用户的公会没有相应用户
-        HTTP/1.1 403 Forbidden
-        {"msg": "Group doesn't have a user with this ID.", "code": 404}
+        HTTP/1.1 412 Precondition Failed
+        {"msg": "Group doesn't have a user with this ID."}
 
     """
     user: Users = g.user
@@ -54,18 +54,18 @@ def add_record():
     user_id = json.get('user_id', None)
 
     if not damage or not type_:
-        return jsonify({"msg": "Parameter is missing", "code": 401}), 400
+        return jsonify({"msg": "Parameter is missing"}), 400
     if user.group_id is None:
-        return jsonify({"msg": "User is not in any group.", "code": 402}), 403
+        return jsonify({"msg": "User is not in any group."}), 403
 
     group: Groups = user.group
     if not group:
-        return jsonify({"msg": "User's group not found.", "code": 403}), 403
+        return jsonify({"msg": "User's group not found."}), 417
 
     if user_id:
         user_of_attack = Users.query.filter_by(id=user_id, group_id=user.group_id).first()
         if not user_of_attack:
-            return jsonify({"msg": "Group doesn't have a user with this ID.", "code": 404}), 403
+            return jsonify({"msg": "Group doesn't have a user with this ID."}), 412
         user = user_of_attack
     if not boss_gen:
         boss_gen = group.current_boss_gen
@@ -115,10 +115,10 @@ def get_records():
 
     @apiErrorExample {json} 用户没有加入公会
         HTTP/1.1 403 Forbidden
-        {"msg": "User is not in any group.", "code": 402}
+        {"msg": "User is not in any group."}
 
     @apiErrorExample {json} 用户的公会不存在
-        HTTP/1.1 403 Forbidden
+        HTTP/1.1 417 Expectation Failed
         {"msg": "User's group not found.", "code": 403}
 
     """
@@ -129,11 +129,11 @@ def get_records():
     end_date: str = request.args.get('end_date', '')
 
     if user.group_id == -1:
-        return jsonify({"msg": "User is not in any group.", "code": 402}), 403
+        return jsonify({"msg": "User is not in any group."}), 403
 
     group: Groups = user.group
     if not group:
-        return jsonify({"msg": "User's group not found.", "code": 403}), 403
+        return jsonify({"msg": "User's group not found."}), 417
 
     records = group.records
     print(records)
@@ -179,15 +179,15 @@ def modify_record():
 
     @apiErrorExample {json} 未提供参数
         HTTP/1.1 400 Bad Request
-        {"msg": "Parameter is missing", "code": 401}
+        {"msg": "Parameter is missing"}
 
     @apiErrorExample {json} 用户没有加入公会
         HTTP/1.1 403 Forbidden
-        {"msg": "User is not in any group.", "code": 402}
+        {"msg": "User is not in any group."}
 
     @apiErrorExample {json} 用户的公会不存在
         HTTP/1.1 403 Forbidden
-        {"msg": "User's group not found.", "code": 403}
+        {"msg": "User's group not found."}
 
     @apiErrorExample {json} 用户的公会没有相应用户
         HTTP/1.1 403 Forbidden

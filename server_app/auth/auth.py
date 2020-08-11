@@ -39,23 +39,23 @@ def sign_up():
         }
 
     @apiErrorExample {json} 用户名或密码过短
-        HTTP/1.1 400 Bad Request
+        HTTP/1.1 406 Not Acceptable
         {
             "msg": "Username or password is too short",
             "code": 102
         }
 
     @apiErrorExample {json} 用户名已存在
-        HTTP/1.1 403 Forbidden
-        {"msg": "User Exists", "code": 103}
+        HTTP/1.1 409 Conflict
+        {"msg": "User Exists."}
 
     @apiErrorExample {json} 邮箱验证码错误
-        HTTP/1.1 401 Unauthorized
-        {"msg": "OTP is invalid.", "code": 104}
+        HTTP/1.1 403 Forbidden
+        {"msg": "OTP is invalid."}
 
     @apiErrorExample {json} 邮箱已存在
-        HTTP/1.1 400 Bad Request
-        {"msg": "Email Exists", "code": 105}
+        HTTP/1.1 409 Conflict
+        {"msg": "Email Exists"}
     """
     if not Config.REGISTER_ENABLED:
         return jsonify({"msg": "Register is not enabled."}), 400
@@ -68,14 +68,13 @@ def sign_up():
         phone = json.get('phone', '')
         nickname = json.get('nickname', username)
     except KeyError:
-        return jsonify({"msg": "Missing parameter", "code": 101}), 400
+        return jsonify({"msg": "Missing parameter"}), 400
     if len(username) < 3 or len(password) < 8:
-        return jsonify({"msg": "Username or password is too short",
-                        "code": 102}), 400
+        return jsonify({"msg": "Username or password is too short"}), 406
     if is_username_exist(username):
-        return jsonify({"msg": "User Exists", "code": 103}), 403
+        return jsonify({"msg": "User Exists"}), 409
     if is_email_exist(email):
-        return jsonify({"msg": "Email Exists", "code": 105}), 403
+        return jsonify({"msg": "Email Exists"}), 409
     if not verify_otp(email, otp):
         return jsonify({"msg": "OTP is invalid", "code": 104}), 400
     new_user: Users = Users(username=username,
@@ -124,11 +123,11 @@ def login():
          }
 
     @apiErrorExample {json} 未提供用户名或密码
-        HTTP/1.1 403 Forbidden
-        {"msg": "Username or Password is missing", "code": 201}
+        HTTP/1.1 400 Bad Request
+        {"msg": "Username or Password is missing"}
 
     @apiErrorExample {json} 用户不存在
-        HTTP/1.1 403 Forbidden
+        HTTP/1.1 417 Expectation Failed
         {"msg": "User does not exist", "code": 202}
 
     @apiErrorExample {json} 密码或用户名错误
@@ -143,17 +142,17 @@ def login():
         phone = json.get('phone', None)
         password: str = json["password"]
     except KeyError:
-        return jsonify({"msg": "Username or Password is missing", "code": 201}), 403
+        return jsonify({"msg": "Username or Password is missing"}), 400
     user: Users = get_user_with(username=username)
     if user is None:
         user = get_user_with(email=email)
     if user is None:
         user = get_user_with(phone=phone)
     if user is None:
-        return jsonify({"msg": "User does not exist", "code": 202}), 403
+        return jsonify({"msg": "User does not exist"}), 417
     hash_pwd: str = user.password
     if not bcrypt.checkpw(password.encode(), hash_pwd.encode()):
-        return jsonify({"msg": "Username or Password is incorrect", "code": 203}), 403
+        return jsonify({"msg": "Username or Password is incorrect"}), 403
     user_id: int = user.id
     token = {
         "sub": user_id,
@@ -193,18 +192,18 @@ def forget_password():
 
         @apiErrorExample {json} 未提供必要参数
             HTTP/1.1 400 Bad Request
-            {"msg": "Missing parameter", "code": 101}
+            {"msg": "Missing parameter"}
 
         @apiErrorExample {json} 邮箱验证码错误
             HTTP/1.1 401 Unauthorized
-            {"msg": "OTP is invalid.", "code": 104}
+            {"msg": "OTP is invalid."}
 
         @apiErrorExample {json} email格式不正确
-            HTTP/1.1 400 Bad Request
-            {"msg": "Invalid email address.", "code": 501}
+            HTTP/1.1 406 Not Acceptable
+            {"msg": "Invalid email address."}
 
         @apiErrorExample {json} 此邮箱没有关联任何账号
-            HTTP/1.1 404 Not Found
+            HTTP/1.1 417 Expectation Failed
             {"msg": "There is no account associated with this email.", "code": 103}
 
         """
@@ -214,15 +213,15 @@ def forget_password():
         email = json['email']
         password = json['password']
     except KeyError:
-        return jsonify({"msg": "Missing parameter", "code": 101}), 400
+        return jsonify({"msg": "Missing parameter"}), 400
     if not is_valid_email(email):
-        return jsonify({"msg": "Invalid email address.", "code": 501}), 400
+        return jsonify({"msg": "Invalid email address."}), 406
 
     user = get_user_with(email=email)
     if not is_email_exist(email) or not user:
-        return jsonify({"msg": "There is no account associated with this email.", "code": 103}), 404
+        return jsonify({"msg": "There is no account associated with this email."}), 417
     if not verify_otp(email, otp):
-        return jsonify({"msg": "OTP is invalid", "code": 104}), 401
+        return jsonify({"msg": "OTP is invalid"}), 401
 
     user.password = bcrypt.hashpw(password, bcrypt.gensalt())
     db.session.commit()
