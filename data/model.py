@@ -11,8 +11,6 @@ db = SQLAlchemy()
 class Users(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
-    # 公会ID，如果没有则为-1
-    group_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     # 用户名，不可修改，唯一
     username = db.Column(db.VARCHAR(255), nullable=False, unique=True)
     # 显示名，应该与游戏名相符，可修改，不唯一
@@ -33,8 +31,10 @@ class Users(db.Model):
     phone_verified = db.Column(db.Boolean, nullable=False)
     # 在此日期之前的 token 都会失效（比如更改密码时之类的）
     valid_since = db.Column(db.Date, nullable=False)
+    # 外键关联Groups
+    group_id = db.Column(db.Integer,db.ForeignKey('group.id'),nullable=True)
     # 方便关联查询
-    group_in = db.relationship('Groups', backref='users')
+    group = db.relationship('Groups',backref='users')
 
     def __repr__(self):
         return '<users %r' % self.id
