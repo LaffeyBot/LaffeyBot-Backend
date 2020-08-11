@@ -1,16 +1,18 @@
-from data.model import CareerFair, Groups
+from data.model import Records, Groups
 from config import Config
 
 
-def damage_to_score(record: CareerFair) -> int:
+def damage_to_score(record: Records) -> int:
+    # 伤害转换分数计算，修正数值错误问题
     if record.boss_gen == 1:
-        multiplier = [1.0, 1.0, 1.1, 1.2, 1.3]
+        multiplier = [1.0, 1.0, 1.1, 1.1, 1.2]
     else:
-        multiplier = [1.2, 1.3, 1.5, 1.7, 2.0]
+        multiplier = [1.2, 1.2, 1.5, 1.7, 2.0]
     return int(int(record.damage) * multiplier[record.boss_gen-1])
 
 
-def subtract_damage_from_group(record: CareerFair, group: Groups):
+def subtract_damage_from_group(record: Records, group: Groups):
+    #  计算boss剩余血量
     damage = int(record.damage)
     if damage < group.boss_remaining_health:
         group.boss_remaining_health -= damage
