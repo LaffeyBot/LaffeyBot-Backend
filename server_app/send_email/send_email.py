@@ -53,8 +53,8 @@ def request_otp():
         if not is_email_exist(email_address):
             return jsonify({"msg": "There is no account associated with this email."}), 417
         email_content += '  您正在重设密码。\n'
-    email_content += '您的验证码为: ' + otp + '\n'
-    email_content += '验证码五分钟内有效。祝指挥官使用愉快喵！'
+    email_content += '    您的验证码为: ' + otp + '\n'
+    email_content += '    验证码五分钟内有效。祝指挥官使用愉快喵！'
     send_email_to(email_address, email_title, email_content)
 
     return jsonify({

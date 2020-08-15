@@ -53,7 +53,7 @@ def invite_member():
     if not id_:
         return jsonify({"msg": "ID is missing.", "code": 201}), 400
 
-    user: Users = g.user
+    user: User = g.user
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group.", "code": 402}), 403
 
@@ -64,7 +64,7 @@ def invite_member():
     if user.role < 2 or group.owner_id != user.id:
         return jsonify({"msg": "Permission Denied", "code": 404}), 403
 
-    user_to_be_kicked: Users = Users.query.filter_by(group_id=group.id, id=user.id).first()
+    user_to_be_kicked: User = User.query.filter_by(group_id=group.id, id=user.id).first()
     if not user_to_be_kicked:
         return jsonify({"msg": "Invalid ID", "code": 405}), 204
     user_to_be_kicked.group_id = -1

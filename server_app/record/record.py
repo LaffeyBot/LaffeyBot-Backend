@@ -44,7 +44,7 @@ def add_record():
         {"msg": "Group doesn't have a user with this ID."}
 
     """
-    user: Users = g.user
+    user: User = g.user
 
     json = request.get_json(force=True)
     damage = json.get('damage', None)
@@ -58,12 +58,12 @@ def add_record():
     if user.group_id is None:
         return jsonify({"msg": "User is not in any group."}), 403
 
-    group: Groups = user.group
+    group: Group = user.group
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
 
     if user_id:
-        user_of_attack = Users.query.filter_by(id=user_id, group_id=user.group_id).first()
+        user_of_attack = User.query.filter_by(id=user_id, group_id=user.group_id).first()
         if not user_of_attack:
             return jsonify({"msg": "Group doesn't have a user with this ID."}), 412
         user = user_of_attack
@@ -72,14 +72,15 @@ def add_record():
     if not boss_order:
         boss_order = group.current_boss_order
 
-    added_record: Records = Records(group_id=user.group_id,
-                                    boss_gen=boss_gen,
-                                    boss_order=boss_order,
-                                    damage=int(damage),
-                                    user_id=user.id,
-                                    nickname=user.nickname,
-                                    date=datetime.datetime.now(),
-                                    type=type_)
+    added_record: PersonalRecord = PersonalRecord(group_id=user.group_id,
+                                                  boss_gen=boss_gen,
+                                                  boss_order=boss_order,
+                                                  damage=int(damage),
+                                                  user_id=user.id,
+                                                  nickname=user.nickname,
+                                                  date=datetime.datetime.now(),
+                                                  type=type_,
+                                                  last_modified=datetime.datetime.now())
     added_record.score = damage_to_score(record=added_record)
     subtract_damage_from_group(record=added_record, group=group)
     db.session.add(added_record)
@@ -122,7 +123,7 @@ def get_records():
         {"msg": "User's group not found.", "code": 403}
 
     """
-    user: Users = g.user
+    user: User = g.user
     limit: str = request.args.get('limit', '')
     page: str = request.args.get('page', '')
     start_date: str = request.args.get('start_date', '')
@@ -131,7 +132,7 @@ def get_records():
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group."}), 403
 
-    group: Groups = user.group
+    group: Group = user.group
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
 
@@ -139,10 +140,10 @@ def get_records():
     print(records)
     if start_date.isdigit() and start_date != -1:
         start = datetime.datetime.fromtimestamp(int(start_date))
-        records = records.filter(Records.date >= start)
+        records = records.filter(TeamRecord.date >= start)
     if end_date.isdigit() and end_date != -1:
         end = datetime.datetime.fromtimestamp(int(end_date))
-        records = records.filter(Records.date <= end)
+        records = records.filter(TeamRecord.date <= end)
     if limit.isdigit() and limit != 0:
         records = records.limit(int(limit))
         if page.isdigit() and page != 0:
@@ -198,4 +199,3 @@ def modify_record():
         {"msg": "Permission Denied", "code": 405}
 
     """
-

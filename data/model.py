@@ -110,6 +110,8 @@ class PersonalRecord(db.Model):
     epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
     # 对应的 Epoch Object
     epoch = db.relationship('TeamBattleEpoch', backref=db.backref('team_records', lazy='dynamic'))
+    # 最后更新时间
+    last_modified = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
         return '<records %r' % self.id

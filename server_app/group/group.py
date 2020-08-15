@@ -49,7 +49,7 @@ def create_group():
         {"msg": "Missing parameter"}
 
     """
-    user: Users = g.user
+    user: User = g.user
     if user.group_id:
         return jsonify({"msg": "User is already in a group."}), 412
 
@@ -62,14 +62,11 @@ def create_group():
     except KeyError:
         return jsonify({"msg": "Missing parameter", "code": 101}), 400
 
-    new_group = Groups(group_chat_id=group_chat_id,
-                       name=group_name,
-                       description=description,
-                       owner_id=user.id,
-                       current_boss_gen=1,
-                       current_boss_order=1,
-                       boss_remaining_health=Config.BOSS_HEALTH[0],
-                       must_request=must_request)
+    new_group = Group(group_chat_id=group_chat_id,
+                      name=group_name,
+                      description=description,
+                      owner_id=user.id,
+                      must_request=must_request)
     db.session.add(new_group)
     db.session.commit()
     db.session.refresh(new_group)
@@ -120,15 +117,15 @@ def get_members():
         {"msg": "User's group not found."}
 
     """
-    user: Users = g.user
+    user: User = g.user
     if user.group_id is None:
         return jsonify({"msg": "User is not in any group."}), 403
 
-    group: Groups = user.group
+    group: Group = user.group
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
 
-    members: List[Users] = group.users
+    members: List[User] = group.users
     data_list: List[dict] = list()
     for member in members:
         data_dict = dict(id=member.id,
@@ -187,7 +184,7 @@ def kick_member():
     if not id_:
         return jsonify({"msg": "ID is missing.", "code": 201}), 400
 
-    user: Users = g.user
+    user: User = g.user
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group."}), 403
 
@@ -198,10 +195,10 @@ def kick_member():
     if user.role < 2 or group.owner_id != user.id:
         return jsonify({"msg": "Permission Denied"}), 403
 
-    user_to_be_kicked: Users = Users.query.filter_by(group_id=group.id, id=user.id).first()
+    user_to_be_kicked: User = User.query.filter_by(group_id=group.id, id=user.id).first()
     if not user_to_be_kicked:
         return jsonify({"msg": "Invalid ID"}), 204
-    user_to_be_kicked.group_id = -1
+    user_to_be_kicked.group_id = None
     db.session.commit()
 
     return jsonify({

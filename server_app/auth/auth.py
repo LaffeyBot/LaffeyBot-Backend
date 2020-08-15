@@ -77,17 +77,17 @@ def sign_up():
         return jsonify({"msg": "Email Exists"}), 410
     if not verify_otp(email, otp):
         return jsonify({"msg": "OTP is invalid", "code": 104}), 400
-    new_user: Users = Users(username=username,
-                            password=bcrypt.hashpw(password.encode(), bcrypt.gensalt()),
-                            nickname=nickname,
-                            created_at=datetime.datetime.now(),
-                            role=0,
-                            email=email,
-                            email_verified=True,
-                            phone=phone,
-                            phone_verified=False,
-                            valid_since=datetime.datetime.now()
-                            )
+    new_user: User = User(username=username,
+                          password=bcrypt.hashpw(password.encode(), bcrypt.gensalt()),
+                          nickname=nickname,
+                          created_at=datetime.datetime.now(),
+                          role=0,
+                          email=email,
+                          email_verified=True,
+                          phone=phone,
+                          phone_verified=False,
+                          valid_since=datetime.datetime.now()
+                          )
     db.session.add(new_user)
     db.session.commit()
     db.session.refresh(new_user)
@@ -154,7 +154,7 @@ def login():
         password: str = json["password"]
     except KeyError:
         return jsonify({"msg": "Username or Password is missing"}), 400
-    user: Users = get_user_with(username=username)
+    user: User = get_user_with(username=username)
     if user is None:
         user = get_user_with(email=email)
     if user is None:

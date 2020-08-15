@@ -20,7 +20,7 @@ def login_required(f):
                                     audience=Config.DOMAIN_NAME)
         except jwt.exceptions.InvalidTokenError:
             return jsonify({"msg": "Auth sign does not verify"}), 401
-        user: Users = get_user_with(id_=decode_jwt.get("sub"))
+        user: User = get_user_with(id_=decode_jwt.get("sub"))
         if user is None:
             return jsonify({"msg": "Can not find user data"}), 401
         if decode_jwt["iat"] < time.mktime(user.valid_since.timetuple()):
@@ -32,31 +32,40 @@ def login_required(f):
 
 
 def current_user_is_admin() -> bool:
-    user: Users = g.user
+    user: User = g.user
     if user is None:
         return False
     return user.role >= 1
 
 
 def current_user_is_owner() -> bool:
-    user: Users = g.user
+    user: User = g.user
     if user is None:
         return False
     return user.role >= 2
 
 
 def get_user_with(username: str = None, email: str = None,
-                  phone: str = None, id_: int = None) -> Optional[Users]:
+                  phone: str = None, id_: int = None) -> Optional[User]:
     if username is not None:
-        return Users.query.filter_by(username=username).first()
+        return User.query.filter_by(username=username).first()
     elif email is not None:
-        return Users.query.filter_by(email=email).first()
+        return User.query.filter_by(email=email).first()
     elif phone is not None:
-        return Users.query.filter_by(phone=phone).first()
+        return User.query.filter_by(phone=phone).first()
     elif id_ is not None:
-        return Users.query.filter_by(id=id_).first()
+        return User.query.filter_by(id=id_).first()
     else:
         return None
+
+
+def get_user_with_any(identifier: str) -> Optional[User]:
+    user = User.query.filter_by(username=identifier).first()
+    if user is None:
+        user = User.query.filter_by(email=identifier).first()
+    if user is None:
+        user = User.query.filter_by(phone=identifier).first()
+    return user
 
 
 def sign(json_: dict) -> str:
