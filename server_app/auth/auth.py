@@ -91,9 +91,20 @@ def sign_up():
     db.session.add(new_user)
     db.session.commit()
     db.session.refresh(new_user)
+
+    token = {
+        "sub": new_user.id,
+        "iss": Config.DOMAIN_NAME,
+        "aud": Config.FRONTEND_DOMAIN_NAME,
+        "iat": int(datetime.datetime.now().timestamp()),
+        "remember": True,
+        "type": "login_credential"
+    }
+    signed = sign(token)
     return jsonify({
         "msg": "Successful!",
         "id": new_user.id,
+        "jwt": signed
     }), 200
 
 
