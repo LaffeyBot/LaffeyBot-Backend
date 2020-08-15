@@ -1,8 +1,8 @@
-from data.model import Records, Groups
+from data.model import PersonalRecord, Group
 from config import Config
 
 
-def damage_to_score(record: Records) -> int:
+def damage_to_score(record: PersonalRecord) -> int:
     # 伤害转换分数计算，修正数值错误问题
     if record.boss_gen == 1:
         multiplier = [1.0, 1.0, 1.1, 1.1, 1.2]
@@ -11,7 +11,7 @@ def damage_to_score(record: Records) -> int:
     return int(int(record.damage) * multiplier[record.boss_gen-1])
 
 
-def subtract_damage_from_group(record: Records, group: Groups):
+def subtract_damage_from_group(record: PersonalRecord, group: Group):
     #  计算boss剩余血量
     damage = int(record.damage)
     if damage < group.boss_remaining_health:
