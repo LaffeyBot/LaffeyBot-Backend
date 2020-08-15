@@ -8,8 +8,8 @@ app = current_app
 db = SQLAlchemy()
 
 
-class Users(db.Model):
-    __tablename__ = 'users'
+class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
     # 用户名，不可修改，唯一
     username = db.Column(db.VARCHAR(255), nullable=False, unique=True)
@@ -34,14 +34,14 @@ class Users(db.Model):
     # 外键关联Groups
     group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=True)
     # 方便关联查询
-    group = db.relationship('Groups',backref='users')
+    group = db.relationship('Groups', backref='users')
 
     def __repr__(self):
         return '<users %r' % self.id
 
 
-class Groups(db.Model):
-    __tablename__ = 'groups'
+class Group(db.Model):
+    __tablename__ = 'group'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
     # 群聊号，可以通过群聊号找到公会，也可以在公会找到群号，会长可修改
     group_chat_id = db.Column(db.Text, nullable=True)
@@ -49,14 +49,6 @@ class Groups(db.Model):
     name = db.Column(db.Text, nullable=False)
     # 公会介绍，会长/管理员可修改
     description = db.Column(db.Text, nullable=False)
-    # 公会所有人
-    owner_id = db.Column(db.Integer, nullable=False)
-    # 当前Boss代目，每次公会战刷新
-    current_boss_gen = db.Column(db.Integer)
-    # 当前是第几个Boss，每次公会战刷新
-    current_boss_order = db.Column(db.Integer)
-    # 剩余血量，每次公会战刷新
-    boss_remaining_health = db.Column(db.Integer)
     # 必须申请出刀
     must_request = db.Column(db.Boolean, nullable=False)
 
@@ -64,8 +56,33 @@ class Groups(db.Model):
         return '<groups %r' % self.id
 
 
-class Records(db.Model):
-    __tablename__ = 'records'
+class TeamRecord(db.Model):
+    __tablename__ = 'team_record'
+    id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
+    record = db.Column(db.Integer, nullable=False)
+    detail_time = db.Column(db.DateTime, nullable=False)
+    # 公会代数ID
+    epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
+    # 对应的 Epoch Object
+    epoch = db.relationship('TeamBattleEpoch', backref=db.backref('team_records', lazy='dynamic'))
+    current_boss_gen = db.Column(db.Integer, nullable=False)
+    current_boss_order = db.Column(db.Integer, nullable=False)
+    boss_remaining_health = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return '<team_record %r' % self.id
+
+
+class TeamBattleEpoch(db.Model):
+    __tablename__ = 'team_battle_epoch'
+    id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
+    name = db.Column(db.VARCHAR(255))
+    from_date = db.Column(db.DateTime)
+    end_date = db.Column(db.DateTime)
+
+
+class PersonalRecord(db.Model):
+    __tablename__ = 'personal_record'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
     # 对应的 Group ID
     group_id = db.Column(db.Integer, db.ForeignKey('groups.id'))
@@ -86,9 +103,13 @@ class Records(db.Model):
     # 游戏名，用于显示
     nickname = db.Column(db.Text, nullable=False)
     # 出刀时间
-    date = db.Column(db.DateTime, nullable=False)
+    detail_date = db.Column(db.DateTime, nullable=False)
     # 出刀类型，normal：普通刀，last：尾刀，compensation：尾刀
     type = db.Column(db.Text, nullable=False)
+    # 公会代数ID
+    epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
+    # 对应的 Epoch Object
+    epoch = db.relationship('TeamBattleEpoch', backref=db.backref('team_records', lazy='dynamic'))
 
     def __repr__(self):
         return '<records %r' % self.id
