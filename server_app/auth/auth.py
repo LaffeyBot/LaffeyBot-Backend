@@ -39,7 +39,7 @@ def sign_up():
         }
 
     @apiErrorExample {json} 用户名或密码过短
-        HTTP/1.1 406 Not Acceptable
+        HTTP/1.1 422 Unprocessable Entity
         {
             "msg": "Username or password is too short",
             "code": 102
@@ -54,7 +54,7 @@ def sign_up():
         {"msg": "OTP is invalid."}
 
     @apiErrorExample {json} 邮箱已存在
-        HTTP/1.1 409 Conflict
+        HTTP/1.1 410 Gone
         {"msg": "Email Exists"}
     """
     if not Config.REGISTER_ENABLED:
@@ -70,11 +70,11 @@ def sign_up():
     except KeyError:
         return jsonify({"msg": "Missing parameter"}), 400
     if len(username) < 3 or len(password) < 8:
-        return jsonify({"msg": "Username or password is too short"}), 406
+        return jsonify({"msg": "Username or password is too short"}), 422
     if is_username_exist(username):
         return jsonify({"msg": "User Exists"}), 409
     if is_email_exist(email):
-        return jsonify({"msg": "Email Exists"}), 409
+        return jsonify({"msg": "Email Exists"}), 410
     if not verify_otp(email, otp):
         return jsonify({"msg": "OTP is invalid", "code": 104}), 400
     new_user: Users = Users(username=username,

@@ -180,7 +180,7 @@ def kick_member():
 
     @apiErrorExample {json} 被踢出的成员不存在
         HTTP/1.1 204 No Content
-        {"msg": "Invalid ID", "code": 405}
+        {"msg": "Invalid ID"}
 
     """
     id_: int = request.get_json().get('id', None)
