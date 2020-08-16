@@ -72,7 +72,8 @@ def add_record():
                                  group_id=group.id,
                                  current_boss_gen=1,
                                  current_boss_order=1,
-                                 boss_remaining_health=Config.BOSS_HEALTH[0])
+                                 boss_remaining_health=Config.BOSS_HEALTH[0],
+                                 last_modified=datetime.datetime.now())
         db.session.add(team_record)
         db.session.commit()
         db.session.refresh(team_record)
