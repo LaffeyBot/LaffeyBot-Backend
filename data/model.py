@@ -60,14 +60,17 @@ class TeamRecord(db.Model):
     __tablename__ = 'team_record'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
     record = db.Column(db.Integer, nullable=False)
-    detail_time = db.Column(db.DateTime, nullable=False)
+    detail_date = db.Column(db.DateTime, nullable=False)
+    # 外键关联Groups
+    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
+    # 方便关联查询
+    group = db.relationship('Groups', backref=db.backref('team_records', lazy='dynamic'))
     # 公会代数ID
     epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
-    # 对应的 Epoch Object
-    epoch = db.relationship('TeamBattleEpoch', backref=db.backref('team_records', lazy='dynamic'))
     current_boss_gen = db.Column(db.Integer, nullable=False)
     current_boss_order = db.Column(db.Integer, nullable=False)
     boss_remaining_health = db.Column(db.Integer, nullable=False)
+    is_locked = db.Column(db.Boolean)
 
     def __repr__(self):
         return '<team_record %r' % self.id
