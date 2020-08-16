@@ -1,4 +1,4 @@
-from data.model import PersonalRecord, Group
+from data.model import PersonalRecord, TeamRecord
 from config import Config
 
 
@@ -11,15 +11,15 @@ def damage_to_score(record: PersonalRecord) -> int:
     return int(int(record.damage) * multiplier[record.boss_gen-1])
 
 
-def subtract_damage_from_group(record: PersonalRecord, group: Group):
+def subtract_damage_from_group(record: PersonalRecord, team_record: TeamRecord):
     #  计算boss剩余血量
     damage = int(record.damage)
-    if damage < group.boss_remaining_health:
-        group.boss_remaining_health -= damage
+    if damage < team_record.boss_remaining_health:
+        team_record.boss_remaining_health -= damage
     else:
-        if group.current_boss_order < 5:
-            group.current_boss_order += 1
+        if team_record.current_boss_order < 5:
+            team_record.current_boss_order += 1
         else:
-            group.current_boss_order = 1
-            group.current_boss_gen += 1
-        group.boss_remaining_health = Config.BOSS_HEALTH[group.current_boss_order-1]
+            team_record.current_boss_order = 1
+            team_record.current_boss_gen += 1
+        team_record.boss_remaining_health = Config.BOSS_HEALTH[team_record.current_boss_order-1]

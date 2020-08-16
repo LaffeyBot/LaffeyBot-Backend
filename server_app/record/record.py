@@ -7,6 +7,7 @@ from .record_tools import damage_to_score, subtract_damage_from_group
 from data.alchemy_encoder import AlchemyEncoder
 import json as js
 from . import record_blueprint
+from config import Config
 
 
 @record_blueprint.route('/add_record', methods=['POST'])
@@ -25,7 +26,7 @@ def add_record():
 
     @apiSuccess (回参) {String}     msg   为"Successful!"
     @apiSuccess (回参) {Dictionary} record  添加的Record，具体内容参照Records表
-    @apiSuccess (回参) {Dictionary} group   更新后的当前公会信息，具体内容参照Groups表
+    @apiSuccess (回参) {Dictionary} team_record   更新后的当前公会信息，具体内容参照TeamRecord表
 
     @apiErrorExample {json} 参数不存在
         HTTP/1.1 400 Bad Request
@@ -61,6 +62,20 @@ def add_record():
     group: Group = user.group
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
+    team_record: TeamRecord = group.team_records\
+        .order_by(TeamRecord.detail_date.desc()).limit(1).first()
+    if not team_record:
+        current_epoch: TeamBattleEpoch = TeamBattleEpoch.query\
+            .order_by(TeamBattleEpoch.end_date.desc()).limit(1).first()
+        team_record = TeamRecord(detail_date=datetime.datetime.now(),
+                                 epoch_id=current_epoch.id,
+                                 group_id=group.id,
+                                 current_boss_gen=1,
+                                 current_boss_order=1,
+                                 boss_remaining_health=Config.BOSS_HEALTH[0])
+        db.session.add(team_record)
+        db.session.commit()
+        db.session.refresh(team_record)
 
     if user_id:
         user_of_attack = User.query.filter_by(id=user_id, group_id=user.group_id).first()
@@ -68,9 +83,9 @@ def add_record():
             return jsonify({"msg": "Group doesn't have a user with this ID."}), 412
         user = user_of_attack
     if not boss_gen:
-        boss_gen = group.current_boss_gen
+        boss_gen = team_record.current_boss_gen
     if not boss_order:
-        boss_order = group.current_boss_order
+        boss_order = team_record.current_boss_order
 
     added_record: PersonalRecord = PersonalRecord(group_id=user.group_id,
                                                   boss_gen=boss_gen,
@@ -78,11 +93,12 @@ def add_record():
                                                   damage=int(damage),
                                                   user_id=user.id,
                                                   nickname=user.nickname,
-                                                  date=datetime.datetime.now(),
+                                                  detail_date=datetime.datetime.now(),
                                                   type=type_,
-                                                  last_modified=datetime.datetime.now())
+                                                  last_modified=datetime.datetime.now(),
+                                                  epoch_id=team_record.epoch_id)
     added_record.score = damage_to_score(record=added_record)
-    subtract_damage_from_group(record=added_record, group=group)
+    subtract_damage_from_group(record=added_record, team_record=team_record)
     db.session.add(added_record)
 
     db.session.commit()
@@ -91,7 +107,7 @@ def add_record():
     return_data = {
         "msg": "Successful!",
         "record": added_record,
-        "group": group
+        "team_record": team_record
     }
     return js.dumps(return_data, cls=AlchemyEncoder), 200
 

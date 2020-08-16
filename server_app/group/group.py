@@ -65,7 +65,6 @@ def create_group():
     new_group = Group(group_chat_id=group_chat_id,
                       name=group_name,
                       description=description,
-                      owner_id=user.id,
                       must_request=must_request)
     db.session.add(new_group)
     db.session.commit()

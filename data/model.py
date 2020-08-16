@@ -32,9 +32,9 @@ class User(db.Model):
     # 在此日期之前的 token 都会失效（比如更改密码时之类的）
     valid_since = db.Column(db.Date, nullable=False)
     # 外键关联Groups
-    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 方便关联查询
-    group = db.relationship('Groups', backref='users')
+    group = db.relationship('Group', backref='users')
 
     def __repr__(self):
         return '<users %r' % self.id
@@ -53,18 +53,21 @@ class Group(db.Model):
     must_request = db.Column(db.Boolean, nullable=False)
 
     def __repr__(self):
-        return '<groups %r' % self.id
+        return '<group %r' % self.id
 
 
 class TeamRecord(db.Model):
     __tablename__ = 'team_record'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
-    record = db.Column(db.Integer, nullable=False)
-    detail_time = db.Column(db.DateTime, nullable=False)
+    record = db.Column(db.Integer)
+    detail_date = db.Column(db.DateTime, nullable=False)
     # 公会代数ID
     epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
     # 对应的 Epoch Object
     epoch = db.relationship('TeamBattleEpoch', backref=db.backref('team_records', lazy='dynamic'))
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
+    # 方便关联查询
+    group = db.relationship('Group', backref=db.backref('team_records', lazy='dynamic'))
     current_boss_gen = db.Column(db.Integer, nullable=False)
     current_boss_order = db.Column(db.Integer, nullable=False)
     boss_remaining_health = db.Column(db.Integer, nullable=False)
@@ -85,9 +88,9 @@ class PersonalRecord(db.Model):
     __tablename__ = 'personal_record'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
     # 对应的 Group ID
-    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'))
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
     # 对应的 Group Object
-    group = db.relationship('Groups', backref=db.backref('records', lazy='dynamic'))
+    group = db.relationship('Group', backref=db.backref('records', lazy='dynamic'))
     # 这是 # 代目
     boss_gen = db.Column(db.Integer, nullable=False)
     # 这是 # 王
@@ -97,9 +100,9 @@ class PersonalRecord(db.Model):
     # 积分，根据以上信息自动生成
     score = db.Column(db.Integer, nullable=False)
     # 用户ID
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     # 对应的 User Object
-    user = db.relationship('Users', backref=db.backref('records', lazy='dynamic'))
+    user = db.relationship('User', backref=db.backref('personal_records', lazy='dynamic'))
     # 游戏名，用于显示
     nickname = db.Column(db.Text, nullable=False)
     # 出刀时间
@@ -107,14 +110,12 @@ class PersonalRecord(db.Model):
     # 出刀类型，normal：普通刀，last：尾刀，compensation：尾刀
     type = db.Column(db.Text, nullable=False)
     # 公会代数ID
-    epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
-    # 对应的 Epoch Object
-    epoch = db.relationship('TeamBattleEpoch', backref=db.backref('team_records', lazy='dynamic'))
+    epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'), nullable=False)
     # 最后更新时间
     last_modified = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
-        return '<records %r' % self.id
+        return '<personal_record %r' % self.id
 
 
 # 存放入会申请和邀请的地方
@@ -124,7 +125,7 @@ class RequestsAndInvites(db.Model):
     # 公会ID
     group_id = db.Column(db.Integer, nullable=False)
     # 玩家ID
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     # 类型：request=玩家申请加入某公会，invite=公会管理邀请玩家加入某公会
     type = db.Column(db.Text, nullable=False)
 
