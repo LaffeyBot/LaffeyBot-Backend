@@ -71,6 +71,8 @@ class TeamRecord(db.Model):
     current_boss_gen = db.Column(db.Integer, nullable=False)
     current_boss_order = db.Column(db.Integer, nullable=False)
     boss_remaining_health = db.Column(db.Integer, nullable=False)
+    # 最后更新时间
+    last_modified = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
         return '<team_record %r' % self.id

@@ -172,13 +172,10 @@ def get_records():
         if page.isdigit() and page != 0:
             records = records.offset(int(limit) * int(page))
 
-    records_list: dict = records.all()
+    records_list: dict = records.order_by(date_type.desc()).all()
 
     db.session.commit()
-    return js.dumps({
-        "msg": "Successful!",
-        "data": records_list
-    }, cls=AlchemyEncoder), 200
+    return js.dumps(records_list, cls=AlchemyEncoder), 200
 
 
 @record_blueprint.route('/modify_record', methods=['POST'])
