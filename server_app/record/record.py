@@ -8,6 +8,7 @@ from data.alchemy_encoder import AlchemyEncoder
 import json as js
 from . import record_blueprint
 from config import Config
+import time
 
 
 @record_blueprint.route('/add_record', methods=['POST'])
@@ -72,10 +73,13 @@ def add_record():
                                  group_id=group.id,
                                  current_boss_gen=1,
                                  current_boss_order=1,
-                                 boss_remaining_health=Config.BOSS_HEALTH[0])
+                                 boss_remaining_health=Config.BOSS_HEALTH[0],
+                                 last_modified=datetime.datetime.now())
         db.session.add(team_record)
         db.session.commit()
         db.session.refresh(team_record)
+    else:
+        team_record.last_modified = datetime.datetime.now()
 
     if user_id:
         user_of_attack = User.query.filter_by(id=user_id, group_id=user.group_id).first()
@@ -103,7 +107,7 @@ def add_record():
 
     db.session.commit()
     db.session.refresh(added_record)
-    db.session.refresh(group)
+    db.session.refresh(team_record)
     return_data = {
         "msg": "Successful!",
         "record": added_record,
@@ -146,6 +150,9 @@ def get_records():
     start_date: str = request.args.get('start_date', '')
     end_date: str = request.args.get('end_date', '')
     type_: str = request.args.get('type', 'personal')
+    last_updated = request.args.get('last_updated', '')
+
+    current_time = datetime.datetime.now()
 
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group."}), 403
@@ -157,9 +164,11 @@ def get_records():
     if type_ == 'team':
         records = group.team_records
         date_type = TeamRecord.detail_date
+        last_modified = TeamRecord.last_modified
     else:
         records = group.records
         date_type = PersonalRecord.detail_date
+        last_modified = PersonalRecord.last_modified
     print(records)
     if start_date.isdigit() and start_date != -1:
         start = datetime.datetime.fromtimestamp(int(start_date))
@@ -171,11 +180,17 @@ def get_records():
         records = records.limit(int(limit))
         if page.isdigit() and page != 0:
             records = records.offset(int(limit) * int(page))
+    if last_updated.isdigit():
+        last_updated_date = datetime.datetime.fromtimestamp(int(last_updated))
+        records = records.filter(last_modified >= last_updated_date)
 
     records_list: dict = records.order_by(date_type.desc()).all()
 
     db.session.commit()
-    return js.dumps(records_list, cls=AlchemyEncoder), 200
+    return js.dumps({
+        "time": datetime.datetime.timestamp(datetime.datetime.now()),
+        "data": records_list
+    }, cls=AlchemyEncoder), 200
 
 
 @record_blueprint.route('/modify_record', methods=['POST'])
