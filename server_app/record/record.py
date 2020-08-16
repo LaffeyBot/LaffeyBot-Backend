@@ -120,6 +120,7 @@ def get_records():
     @apiVersion 1.0.0
     @apiName get_records
     @apiGroup Records
+    @apiParam {String}  type              (必要)    personal：个人出刀记录/team：公会状态记录
     @apiParam {int}     limit             (可选)    多少条数据
     @apiParam {String}  page              (可选)    第几页(如果提供page则必须提供limit）(0为第一页）
     @apiParam {int}     start_date        (可选)    开始日期时间戳（秒）
@@ -128,7 +129,7 @@ def get_records():
 
 
     @apiSuccess (回参) {String}           msg   为"Successful!"
-    @apiSuccess (回参) {List[Dictionary]} data  相应的Records，具体内容参照Records表
+    @apiSuccess (回参) {List[Dictionary]} data  相应的Records，具体内容参照PersonalRecord/TeamRecord表
 
     @apiErrorExample {json} 用户没有加入公会
         HTTP/1.1 403 Forbidden
@@ -144,6 +145,7 @@ def get_records():
     page: str = request.args.get('page', '')
     start_date: str = request.args.get('start_date', '')
     end_date: str = request.args.get('end_date', '')
+    type_: str = request.args.get('type', 'personal')
 
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group."}), 403
@@ -152,14 +154,19 @@ def get_records():
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
 
-    records = group.records
+    if type_ == 'team':
+        records = group.team_records
+        date_type = TeamRecord.detail_date
+    else:
+        records = group.records
+        date_type = PersonalRecord.detail_date
     print(records)
     if start_date.isdigit() and start_date != -1:
         start = datetime.datetime.fromtimestamp(int(start_date))
-        records = records.filter(TeamRecord.date >= start)
+        records = records.filter(date_type >= start)
     if end_date.isdigit() and end_date != -1:
         end = datetime.datetime.fromtimestamp(int(end_date))
-        records = records.filter(TeamRecord.date <= end)
+        records = records.filter(date_type <= end)
     if limit.isdigit() and limit != 0:
         records = records.limit(int(limit))
         if page.isdigit() and page != 0:
