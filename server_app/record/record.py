@@ -25,8 +25,8 @@ def add_record():
     @apiParam {String}  boss_gen     (可选)    boss周目（如果没有则为当前boss）
     @apiParam {String}  boss_order   (可选)    第几个boss（如果没有则为当前boss）
 
-    @apiSuccess (回参) {String}     msg   为"Successful!"
-    @apiSuccess (回参) {Dictionary} record  添加的Record，具体内容参照Records表
+    @apiSuccess (回参) {String}     msg        为"Successful!"
+    @apiSuccess (回参) {Dictionary} record     添加的Record，具体内容参照Records表
     @apiSuccess (回参) {Dictionary} team_record   更新后的当前公会信息，具体内容参照TeamRecord表
 
     @apiErrorExample {json} 参数不存在
@@ -129,11 +129,16 @@ def get_records():
     @apiParam {String}  page              (可选)    第几页(如果提供page则必须提供limit）(0为第一页）
     @apiParam {int}     start_date        (可选)    开始日期时间戳（秒）
     @apiParam {int}     end_date          (可选)    结束日期时间戳（秒）
+    @apiParam {int}     last_updated      (可选)    在此时间之后更新的记录会被返回，deleted 项会记录在此时间之后删除的项。
     @apiDescription 返回公会中的出刀列表，如果无参数则返回所有出刀记录。
 
 
     @apiSuccess (回参) {String}           msg   为"Successful!"
     @apiSuccess (回参) {List[Dictionary]} data  相应的Records，具体内容参照PersonalRecord/TeamRecord表
+
+    @apiSuccessExample {json} 没有更新
+        HTTP/1.1 304 Not Modified
+        # 注：只有在指定了last_updated 之后才会返回这一选项
 
     @apiErrorExample {json} 用户没有加入公会
         HTTP/1.1 403 Forbidden
@@ -152,7 +157,7 @@ def get_records():
     type_: str = request.args.get('type', 'personal')
     last_updated = request.args.get('last_updated', '')
 
-    current_time = datetime.datetime.now()
+    current_time = int(datetime.datetime.timestamp(datetime.datetime.now()))
 
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group."}), 403
@@ -186,9 +191,13 @@ def get_records():
 
     records_list: dict = records.order_by(date_type.desc()).all()
 
-    db.session.commit()
+    # db.session.commit()
+
+    if last_updated.isdigit() and not records_list:
+        return '', 304  # 如果没有更新
+
     return js.dumps({
-        "time": datetime.datetime.timestamp(datetime.datetime.now()),
+        "time": current_time,
         "data": records_list
     }, cls=AlchemyEncoder), 200
 
