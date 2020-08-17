@@ -2,13 +2,12 @@ from flask import request, jsonify, g
 import datetime
 from ..auth_tools import login_required
 from data.model import *
-from ..group_tools import get_group_of_user
 from .record_tools import damage_to_score, subtract_damage_from_group
 from data.alchemy_encoder import AlchemyEncoder
 import json as js
 from . import record_blueprint
 from config import Config
-import time
+from server_app.push_notification_tools import push_ios
 
 
 @record_blueprint.route('/add_record', methods=['POST'])
@@ -113,6 +112,16 @@ def add_record():
         "record": added_record,
         "team_record": team_record
     }
+
+    user_name_list = []
+    for user_obj in group.users:
+        user_name_list += user_obj.username
+    content = user.nickname
+    content += '对' + str(team_record.current_boss_order) + '王'
+    content += '造成了' + added_record.damage + '点伤害。'
+    content += 'Boss 血量还剩' + team_record.boss_remaining_health
+    push_ios(user_name_list, '添加了新纪录', '', content)
+
     return js.dumps(return_data, cls=AlchemyEncoder), 200
 
 
