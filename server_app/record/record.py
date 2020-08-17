@@ -152,7 +152,7 @@ def get_records():
     type_: str = request.args.get('type', 'personal')
     last_updated = request.args.get('last_updated', '')
 
-    current_time = datetime.datetime.now()
+    current_time = datetime.datetime.timestamp(datetime.datetime.now())
 
     if user.group_id == -1:
         return jsonify({"msg": "User is not in any group."}), 403
@@ -188,7 +188,7 @@ def get_records():
 
     db.session.commit()
     return js.dumps({
-        "time": datetime.datetime.timestamp(datetime.datetime.now()),
+        "time": int(current_time),
         "data": records_list
     }, cls=AlchemyEncoder), 200
 
