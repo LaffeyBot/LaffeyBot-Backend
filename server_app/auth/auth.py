@@ -176,7 +176,8 @@ def login():
     signed = sign(token)
     return jsonify({
         "msg": "successful",
-        "jwt": signed
+        "jwt": signed,
+        "id": user_id
     }), 200
 
 
