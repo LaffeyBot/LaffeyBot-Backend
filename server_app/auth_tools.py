@@ -97,3 +97,18 @@ def verify_otp(identifier: str, passcode: str) -> bool:
     secret_encoded = base64.b32encode(secret.encode())
     otp = pyotp.TOTP(secret_encoded)
     return otp.verify(passcode, valid_window=Config.OTP_VALID_WINDOW)
+
+
+def generate_user_dict(user: User, for_oneself: bool) -> dict:
+    user_data = {
+        "username": user.username,
+        "id": user.id,
+        "nickname": user.nickname,
+        "role": user.role,
+        "email": user.email
+    }
+    if user.group_id:
+        user_data["group_id"] = user.group_id
+    if user.qq:
+        user_data["qq"] = user.qq
+    return user_data
