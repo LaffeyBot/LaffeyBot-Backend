@@ -23,10 +23,10 @@ def generate_header(json: dict) -> dict:
     return header
 
 
-def link_account_with_token(platform: str, account: str, token: str):
+def account_with_token(platform: str, account: str, token: str, operator_type: int):
     base_url = 'https://api.tpns.tencent.com/v3/device/account/batchoperate'
     data = {
-        "operator_type": 1,
+        "operator_type": operator_type,
         "platform": platform,
         "token_accounts": [{
             "token": token,
