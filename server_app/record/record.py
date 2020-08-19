@@ -280,8 +280,12 @@ def modify_record():
         {"msg": "Group doesn't have a user with this ID.", "code": 404}
 
     @apiErrorExample {json} 用户没有权限修改
-        HTTP/1.1 403 Forbidden
-        {"msg": "Permission Denied", "code": 405}
+        HTTP/1.1 417 Expectation Failed
+        {"msg": "Permission Denied"}
+
+    @apiErrorExample {json} 没有找到这一条记录
+        HTTP/1.1 406 Gone
+        {'msg': 'Record not found'}
 
     """
     user: User = g.user
@@ -295,27 +299,27 @@ def modify_record():
     # 2.参数处理
     if not id_:
         return jsonify({"msg": "Parameter is missing"}), 400
-    if damage or type_ or boss_gen or boss_order:
+    if not (damage or type_ or boss_gen or boss_order):
         return jsonify({'msg': 'Must submit one optional option'}), 400
     # 3.判断是否有权限操作
-        try:
-            record = PersonalRecord()
-            r = record.query.filter(id=id_).first()
-            # 3.1 判断是否是本人操作
-            if r.user.id==user.id or user.role!=0:
-                if damage:
-                    r.damage=damage
-                if type_:
-                    r.damage = damage
-                if boss_order:
-                    r.boss_order = boss_order
-                if boss_gen:
-                    r.boss_gen = boss_gen
-                db.session.commit()
-            else:
-                return jsonify({"msg": "Permission Denied", "code": 405}),403
-        except Exception as e:
-            db.session.rollback()
-            print(e)
-
+    try:
+        r = PersonalRecord.query.filter_by(id=id_).first()
+        if not r:
+            return jsonify({'msg': 'Record not found'}), 410
+        # 3.1 判断是否是本人操作
+        if r.user.id == user.id or user.role != 0:
+            if damage:
+                r.damage = damage
+            if type_:
+                r.type = type_
+            if boss_order:
+                r.boss_order = boss_order
+            if boss_gen:
+                r.boss_gen = boss_gen
+            db.session.commit()
+        else:
+            return jsonify({"msg": "Permission Denied"}), 417
+    except Exception as e:
+        db.session.rollback()
+        print(e)
 
