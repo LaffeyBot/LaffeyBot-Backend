@@ -35,6 +35,7 @@ class User(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 方便关联查询
     group = db.relationship('Group', backref='users')
+    qq = db.Column(db.Integer(), nullable=True)
 
     def __repr__(self):
         return '<users %r' % self.id

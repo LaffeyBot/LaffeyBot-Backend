@@ -1,6 +1,6 @@
 from flask import request, jsonify
 import datetime
-from server_app.auth_tools import is_username_exist, get_user_with, sign, verify_otp, is_email_exist
+from server_app.auth_tools import is_username_exist, get_user_with, sign, verify_otp, is_email_exist, generate_user_dict
 import bcrypt
 from config import Config
 from data.model import *
@@ -29,13 +29,22 @@ def sign_up():
             "otp": "123123"
         }
 
-    @apiSuccess (回参) {String} msg  为"Successful!"
-    @apiSuccess (回参) {String} id   用户id
+    @apiSuccess (回参) {String} msg   为"Successful!"
+    @apiSuccess (回参) {String} jwt   token，应当在后续请求中被附在 auth 栏
+    @apiSuccess (回参) {String} user  user信息，具体见样例
     @apiSuccessExample {json} 成功样例
         HTTP/1.1 200 OK
         {
             "msg": "Successful!",
-            "id": 12345
+            "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+            "user": {
+                "username": "foo",
+                "nickname": "bar",
+                "id": 233,
+                "role": 2,
+                "email": "example@example.com",
+                "group_id": 233  // This is optional.
+            }
         }
 
     @apiErrorExample {json} 用户名或密码过短
@@ -100,10 +109,14 @@ def sign_up():
         "remember": True,
         "type": "login_credential"
     }
+
     signed = sign(token)
+
+    user_data = generate_user_dict(user=new_user, for_oneself=True)
+
     return jsonify({
         "msg": "Successful!",
-        "id": new_user.id,
+        "user": user_data,
         "jwt": signed
     }), 200
 
@@ -128,9 +141,18 @@ def login():
 
     @apiSuccess (回参) {String} msg  为"Successful!"
     @apiSuccess (回参) {String} jwt  jwt token，应当放入auth header
+    @apiSuccess (回参) {String} user  user信息，具体见样例
     @apiSuccessExample {json} 成功样例
         { "msg": "Successful!",
-         "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+         "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+         "user": {
+                "username": "foo",
+                "nickname": "bar",
+                "id": 233,
+                "role": 2,
+                "email": "example@example.com",
+                "group_id": 233  // This is optional.
+            }
          }
 
     @apiErrorExample {json} 未提供用户名或密码
@@ -174,10 +196,13 @@ def login():
         "type": "login_credential"
     }
     signed = sign(token)
+
+    user_data = generate_user_dict(user, True)
+
     return jsonify({
         "msg": "successful",
         "jwt": signed,
-        "id": user_id
+        "user": user_data
     }), 200
 
 
