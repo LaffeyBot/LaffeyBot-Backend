@@ -33,8 +33,11 @@ class User(db.Model):
     valid_since = db.Column(db.Date, nullable=False)
     # 外键关联Groups
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
-    # 方便关联查询
-    group = db.relationship('Group', backref='users')
+    # 查询挂树信息
+    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('user',lazy='dynamic'))
+
+    # 查询个人出刀记录
+    personal_records = db.relationship('PersonalRecord', backref=db.backref('user', lazy='dynamic'))
 
     def __repr__(self):
         return '<users %r' % self.id
@@ -51,7 +54,12 @@ class Group(db.Model):
     description = db.Column(db.Text, nullable=False)
     # 必须申请出刀
     must_request = db.Column(db.Boolean, nullable=False)
-
+    # 查询挂树信息
+    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('group',lazy='dynamic'))
+    # 查询小组个人出刀记录
+    personal_records = db.relationship('PersonalRecord', backref=db.backref('group', lazy='dynamic'))
+    # 查询小组成员
+    users = db.relationship('User', backref=db.backref('group',lazy='dynamic'))
     def __repr__(self):
         return '<group %r' % self.id
 
@@ -91,8 +99,6 @@ class PersonalRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
     # 对应的 Group ID
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
-    # 对应的 Group Object
-    group = db.relationship('Group', backref=db.backref('records', lazy='dynamic'))
     # 这是 # 代目
     boss_gen = db.Column(db.Integer, nullable=False)
     # 这是 # 王
@@ -103,8 +109,6 @@ class PersonalRecord(db.Model):
     score = db.Column(db.Integer, nullable=False)
     # 用户ID
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # 对应的 User Object
-    user = db.relationship('User', backref=db.backref('personal_records', lazy='dynamic'))
     # 游戏名，用于显示
     nickname = db.Column(db.Text, nullable=False)
     # 出刀时间
@@ -133,3 +137,23 @@ class RequestsAndInvites(db.Model):
 
     def __repr__(self):
         return '<requests_and_invites %r' % self.id
+
+
+class HangOnTree(db.Model):
+    '''记录挂树的信息'''
+    __tablename__ = 'hang_on_Tree'
+    id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
+    # 说明信息，可空
+    info = db.Column(db.Text, nullable=True)
+    # 开始挂树时间信息
+    start_time = db.Column(db.DateTime,nullable=False)
+    # 状态（是否挂树）
+    status = db.Column(db.Boolean,nullable=False)
+    # 关联公会
+    group_id = db.Column(db.Integer,db.ForeignKey('group.id'))
+    # 关联用户
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+
+    def __repr__(self):
+        return f'{self.id} is hanging on the tree'
