@@ -6,11 +6,21 @@ from hashlib import sha256
 import requests
 
 
-def generate_cert(time_stamp: str, json: dict):
-    json_string = str(json)
-    combined = (time_stamp + str(Config.TPN_ACCESS_ID) + json_string).encode('utf-8')
-    token = hmac.new(combined, Config.TPN_SECRET_KEY.encode('utf-8'), digestmod=sha256).hexdigest()
-    return base64.b64encode(token.encode('utf8'))
+def generate_cert(json: dict):
+    # json_string = str(json)
+    # combined = (time_stamp + str(Config.TPN_ACCESS_ID) + json_string).encode()
+    # token = hmac.new(combined, Config.TPN_SECRET_KEY.encode(), digestmod=sha256).hexdigest()
+    key: str = str(Config.TPN_ACCESS_ID) + ':' + Config.TPN_SECRET_KEY
+    return base64.b64encode(key.encode())
+
+
+def generate_header(json: dict) -> dict:
+    # timestamp = str(int(datetime.timestamp(datetime.now())))
+    # header = {'Sign': generate_cert(time_stamp=timestamp, json=json),
+    #           'TimeStamp': timestamp,
+    #           'AccessId': str(Config.TPN_ACCESS_ID)}
+    header = {'Authorization': 'Basic ' + generate_cert(json).decode()}
+    return header
 
 
 def link_account_with_token(platform: str, account: str, token: str):
@@ -26,7 +36,8 @@ def link_account_with_token(platform: str, account: str, token: str):
                 }
             ]
         }]}
-    r = requests.post(base_url, json=data)
+    print(data)
+    r = requests.post(base_url, json=data, headers=generate_header(data))
     return r.json()
 
 
@@ -52,8 +63,9 @@ def push_ios(account_list: list, title: str, subtitle: str, content: str):
             }
         }
     }
-
-    r = requests.post(base_url, json=data)
+    print('-------------------------')
+    print(data)
+    r = requests.post(base_url, json=data, headers=generate_header(data))
     return r.json()
 
 

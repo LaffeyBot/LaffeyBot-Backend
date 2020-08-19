@@ -1,9 +1,9 @@
 from flask import Blueprint
 
 pn_blueprint = Blueprint(
-    "email_v1",
+    "push",
     __name__,
-    url_prefix='/v1/email'
+    url_prefix='/v1/push'
 )
 
 

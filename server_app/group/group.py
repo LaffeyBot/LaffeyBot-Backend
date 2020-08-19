@@ -191,13 +191,14 @@ def kick_member():
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
 
-    if user.role < 2 or group.owner_id != user.id:
+    if user.role < 2:
         return jsonify({"msg": "Permission Denied"}), 403
 
-    user_to_be_kicked: User = User.query.filter_by(group_id=group.id, id=user.id).first()
+    user_to_be_kicked: User = User.query.filter_by(group_id=group.id, id=id_).first()
     if not user_to_be_kicked:
         return jsonify({"msg": "Invalid ID"}), 204
     user_to_be_kicked.group_id = None
+    user_to_be_kicked.role = 0
     db.session.commit()
 
     return jsonify({

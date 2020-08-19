@@ -115,12 +115,16 @@ def add_record():
 
     user_name_list = []
     for user_obj in group.users:
-        user_name_list += user_obj.username
+        user_name_list.append(user_obj.username)
     content = user.nickname
     content += '对' + str(team_record.current_boss_order) + '王'
-    content += '造成了' + added_record.damage + '点伤害。'
-    content += 'Boss 血量还剩' + team_record.boss_remaining_health
+    content += '造成了' + str(added_record.damage) + '点伤害'
+    if team_record.boss_remaining_health == Config.BOSS_HEALTH[team_record.current_boss_order - 1]:
+        content += '并击破。'
+    else:
+        content += '。Boss 血量还剩' + str(team_record.boss_remaining_health) + '。'
     push_ios(user_name_list, '添加了新纪录', '', content)
+
 
     return js.dumps(return_data, cls=AlchemyEncoder), 200
 
