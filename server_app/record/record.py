@@ -215,6 +215,34 @@ def get_records():
     }, cls=AlchemyEncoder), 200
 
 
+@record_blueprint.route('/delete_record', methods=['DELETE'])
+@login_required
+def delete_record():
+    """
+    @api {post} /v1/record/delete_record 删除一条记录
+    @apiVersion 1.0.0
+    @apiName delete_record
+    @apiGroup Records
+    @apiParam {String}  type              (必要)    personal：个人出刀记录/team：公会状态记录
+    @apiParam {int}     id                (必要)    出刀ID
+    @apiDescription 删除一条记录。操作者必须是本人或管理员。
+
+
+    @apiSuccess (回参) {String}           msg   为"Successful!"
+
+
+    @apiErrorExample {json} 用户没有加入公会
+        HTTP/1.1 403 Forbidden
+        {"msg": "User is not in any group."}
+
+    @apiErrorExample {json} 用户的公会不存在
+        HTTP/1.1 417 Expectation Failed
+        {"msg": "User's group not found.", "code": 403}
+
+    """
+    pass
+
+
 @record_blueprint.route('/modify_record', methods=['POST'])
 @login_required
 def modify_record():
