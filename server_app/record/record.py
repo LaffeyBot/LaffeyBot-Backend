@@ -62,10 +62,10 @@ def add_record():
     group: Group = user.group
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
-    team_record: TeamRecord = group.team_records\
+    team_record: TeamRecord = group.team_records \
         .order_by(TeamRecord.detail_date.desc()).limit(1).first()
     if not team_record:
-        current_epoch: TeamBattleEpoch = TeamBattleEpoch.query\
+        current_epoch: TeamBattleEpoch = TeamBattleEpoch.query \
             .order_by(TeamBattleEpoch.end_date.desc()).limit(1).first()
         team_record = TeamRecord(detail_date=datetime.datetime.now(),
                                  epoch_id=current_epoch.id,
@@ -215,6 +215,34 @@ def get_records():
     }, cls=AlchemyEncoder), 200
 
 
+@record_blueprint.route('/delete_record', methods=['DELETE'])
+@login_required
+def delete_record():
+    """
+    @api {post} /v1/record/delete_record 删除一条记录
+    @apiVersion 1.0.0
+    @apiName delete_record
+    @apiGroup Records
+    @apiParam {String}  type              (必要)    personal：个人出刀记录/team：公会状态记录
+    @apiParam {int}     id                (必要)    出刀ID
+    @apiDescription 删除一条记录。操作者必须是本人或管理员。
+
+
+    @apiSuccess (回参) {String}           msg   为"Successful!"
+
+
+    @apiErrorExample {json} 用户没有加入公会
+        HTTP/1.1 403 Forbidden
+        {"msg": "User is not in any group."}
+
+    @apiErrorExample {json} 用户的公会不存在
+        HTTP/1.1 417 Expectation Failed
+        {"msg": "User's group not found.", "code": 403}
+
+    """
+    pass
+
+
 @record_blueprint.route('/modify_record', methods=['POST'])
 @login_required
 def modify_record():
@@ -252,7 +280,46 @@ def modify_record():
         {"msg": "Group doesn't have a user with this ID.", "code": 404}
 
     @apiErrorExample {json} 用户没有权限修改
-        HTTP/1.1 403 Forbidden
-        {"msg": "Permission Denied", "code": 405}
+        HTTP/1.1 417 Expectation Failed
+        {"msg": "Permission Denied"}
+
+    @apiErrorExample {json} 没有找到这一条记录
+        HTTP/1.1 406 Gone
+        {'msg': 'Record not found'}
 
     """
+    user: User = g.user
+    # 1.获取接收的json
+    json = request.get_json(force=True)  # force参数作用是忽视请求类型，并强制解析为json
+    id_ = json.get('id', None)
+    damage = json.get('damage', None)
+    type_ = json.get('type', None)
+    boss_gen = json.get('boss_gen', None)
+    boss_order = json.get('boss_order', None)
+    # 2.参数处理
+    if not id_:
+        return jsonify({"msg": "Parameter is missing"}), 400
+    if not (damage or type_ or boss_gen or boss_order):
+        return jsonify({'msg': 'Must submit one optional option'}), 400
+    # 3.判断是否有权限操作
+    try:
+        r = PersonalRecord.query.filter_by(id=id_).first()
+        if not r:
+            return jsonify({'msg': 'Record not found'}), 410
+        # 3.1 判断是否是本人操作
+        if r.user.id == user.id or user.role != 0:
+            if damage:
+                r.damage = damage
+            if type_:
+                r.type = type_
+            if boss_order:
+                r.boss_order = boss_order
+            if boss_gen:
+                r.boss_gen = boss_gen
+            db.session.commit()
+        else:
+            return jsonify({"msg": "Permission Denied"}), 417
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+

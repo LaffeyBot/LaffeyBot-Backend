@@ -11,7 +11,8 @@ def create_app(config_file=config.Config):
     CORS(app)
 
     from data.model import db
-    db.init_app(app)
+    with app.app_context():
+        db.init_app(app)
 
     from .auth import auth_blueprint
     from .group import group_blueprint
