@@ -20,7 +20,7 @@ class User(db.Model):
     # 密码，hashed using bcrypt
     password = db.Column(db.Text, nullable=False)
     # 创建时间，自动生成
-    created_at = db.Column(db.Date, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)
     # 绑定的邮箱，可空
     email = db.Column(db.Text)
     # 邮箱已验证
@@ -30,7 +30,7 @@ class User(db.Model):
     # 手机号已验证
     phone_verified = db.Column(db.Boolean, nullable=False)
     # 在此日期之前的 token 都会失效（比如更改密码时之类的）
-    valid_since = db.Column(db.Date, nullable=False)
+    valid_since = db.Column(db.DateTime, nullable=False)
     # 外键关联Groups
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 方便关联查询
