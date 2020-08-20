@@ -34,10 +34,11 @@ class User(db.Model):
     # 外键关联Groups
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 查询挂树信息
-    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('user',lazy='dynamic'))
+    hang_on_trees = db.relationship('HangOnTree',backref='user', lazy='dynamic')
 
     # 查询个人出刀记录
-    personal_records = db.relationship('PersonalRecord', backref=db.backref('user', lazy='dynamic'))
+    personal_records = db.relationship('PersonalRecord', backref='user', lazy='dynamic')
+    qq = db.Column(db.Integer)
 
     def __repr__(self):
         return '<users %r' % self.id
@@ -55,11 +56,12 @@ class Group(db.Model):
     # 必须申请出刀
     must_request = db.Column(db.Boolean, nullable=False)
     # 查询挂树信息
-    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('group',lazy='dynamic'))
+    hang_on_trees = db.relationship('HangOnTree',backref='group', lazy='dynamic')
     # 查询小组个人出刀记录
-    personal_records = db.relationship('PersonalRecord', backref=db.backref('group', lazy='dynamic'))
+    personal_records = db.relationship('PersonalRecord', backref='group', lazy='dynamic')
     # 查询小组成员
-    users = db.relationship('User', backref=db.backref('group',lazy='dynamic'))
+    users = db.relationship('User', backref='group', lazy='dynamic')
+
     def __repr__(self):
         return '<group %r' % self.id
 
@@ -161,7 +163,6 @@ class HangOnTree(db.Model):
     group_id = db.Column(db.Integer,db.ForeignKey('group.id'))
     # 关联用户
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
 
     def __repr__(self):
         return f'{self.id} is hanging on the tree'
