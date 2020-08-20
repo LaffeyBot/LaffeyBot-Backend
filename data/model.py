@@ -55,11 +55,11 @@ class Group(db.Model):
     # 必须申请出刀
     must_request = db.Column(db.Boolean, nullable=False)
     # 查询挂树信息
-    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('group',lazy='dynamic'))
+    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('group',lazy='dynamic'),lazy='dynamic')
     # 查询小组个人出刀记录
-    personal_records = db.relationship('PersonalRecord', backref=db.backref('group', lazy='dynamic'))
+    personal_records = db.relationship('PersonalRecord', backref=db.backref('group', lazy='dynamic'),lazy='dynamic')
     # 查询小组成员
-    users = db.relationship('User', backref=db.backref('group',lazy='dynamic'))
+    users = db.relationship('User', backref=db.backref('group',lazy='dynamic'),lazy='dynamic')
     def __repr__(self):
         return '<group %r' % self.id
 
@@ -72,10 +72,10 @@ class TeamRecord(db.Model):
     # 公会代数ID
     epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
     # 对应的 Epoch Object
-    epoch = db.relationship('TeamBattleEpoch', backref=db.backref('team_records', lazy='dynamic'))
+    epoch = db.relationship('TeamBattleEpoch', backref=db.backref('team_records', lazy='dynamic'),lazy='dynamic')
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 方便关联查询
-    group = db.relationship('Group', backref=db.backref('team_records', lazy='dynamic'))
+    group = db.relationship('Group', backref=db.backref('team_records', lazy='dynamic'),lazy='dynamic')
     current_boss_gen = db.Column(db.Integer, nullable=False)
     current_boss_order = db.Column(db.Integer, nullable=False)
     boss_remaining_health = db.Column(db.Integer, nullable=False)
