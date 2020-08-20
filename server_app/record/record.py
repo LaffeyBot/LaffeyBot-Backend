@@ -230,17 +230,35 @@ def delete_record():
 
     @apiSuccess (回参) {String}           msg   为"Successful!"
 
+    @apiErrorExample {json} 未提供参数
+        HTTP/1.1 400 Bad Request
+        {"msg": "Parameter is missing"}
 
     @apiErrorExample {json} 用户没有加入公会
         HTTP/1.1 403 Forbidden
         {"msg": "User is not in any group."}
 
-    @apiErrorExample {json} 用户的公会不存在
+    @apiErrorExample {json} 用户没有权限修改
         HTTP/1.1 417 Expectation Failed
-        {"msg": "User's group not found.", "code": 403}
+        {"msg": "Permission Denied"}
 
     """
-    pass
+    user: User = g.user
+    json = request.get_json(force=True)
+    id_ = json.get('id', None)
+
+    if not id_:
+        return jsonify({"msg": "Parameter is missing"}), 400
+    if not user.group_id:
+        return jsonify({"msg": "User is not in any group."}), 403
+
+    r = PersonalRecord.query.filter_by(id=id_, group_id=user.group_id).first()
+
+    if r.user.id == user.id or user.role > 0:  # 有权限删除
+        db.session.delete(r)
+        db.session.commit()
+    else:
+        return jsonify({"msg": "Permission Denied"}), 417
 
 
 @record_blueprint.route('/modify_record', methods=['POST'])
@@ -271,13 +289,9 @@ def modify_record():
         HTTP/1.1 403 Forbidden
         {"msg": "User is not in any group."}
 
-    @apiErrorExample {json} 用户的公会不存在
-        HTTP/1.1 403 Forbidden
-        {"msg": "User's group not found."}
-
-    @apiErrorExample {json} 用户的公会没有相应用户
-        HTTP/1.1 403 Forbidden
-        {"msg": "Group doesn't have a user with this ID.", "code": 404}
+    @apiErrorExample {json} 没有修改任何信息
+        HTTP/1.1 406 Not Acceptable
+        {'msg': 'Must submit one optional option'}
 
     @apiErrorExample {json} 用户没有权限修改
         HTTP/1.1 417 Expectation Failed
@@ -297,13 +311,15 @@ def modify_record():
     boss_gen = json.get('boss_gen', None)
     boss_order = json.get('boss_order', None)
     # 2.参数处理
+    if not user.group_id:
+        return jsonify({"msg": "User is not in any group."}), 403
     if not id_:
         return jsonify({"msg": "Parameter is missing"}), 400
     if not (damage or type_ or boss_gen or boss_order):
-        return jsonify({'msg': 'Must submit one optional option'}), 400
+        return jsonify({'msg': 'Must submit one optional option'}), 406
     # 3.判断是否有权限操作
     try:
-        r = PersonalRecord.query.filter_by(id=id_).first()
+        r = PersonalRecord.query.filter_by(id=id_, group_id=user.group_id).first()
         if not r:
             return jsonify({'msg': 'Record not found'}), 410
         # 3.1 判断是否是本人操作
