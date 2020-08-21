@@ -57,7 +57,9 @@ def add_record():
     user_id = json.get('user_id', None)
     origin = json.get('origin', None)
 
-    if not damage or not type_:
+    if not type_:
+        return jsonify({"msg": "Parameter is missing"}), 400
+    if type_ != 'last' and not damage:
         return jsonify({"msg": "Parameter is missing"}), 400
     if user.group_id is None:
         return jsonify({"msg": "User is not in any group."}), 403
@@ -92,6 +94,9 @@ def add_record():
         boss_gen = team_record.current_boss_gen
     if not boss_order:
         boss_order = team_record.current_boss_order
+
+    if not damage:
+        damage = team_record.boss_remaining_health
 
     added_record: PersonalRecord = PersonalRecord(group_id=user.group_id,
                                                   boss_gen=boss_gen,
