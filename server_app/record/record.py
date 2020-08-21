@@ -9,6 +9,7 @@ from . import record_blueprint
 from config import Config
 from server_app.push_notification_tools import push_ios
 from server_app.qq_tools import send_message_to_qq
+import asyncio
 
 
 @record_blueprint.route('/add_record', methods=['POST'])
