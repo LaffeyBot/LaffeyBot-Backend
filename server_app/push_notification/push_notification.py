@@ -64,5 +64,5 @@ def unlink_token():
     if not token or not platform:
         return jsonify({"msg": "Parameter is missing"}), 400
 
-    result = account_with_token(account=user.username, platform=platform, token=token, operator_type=4)
+    result = account_with_token(account=user.username, platform=platform, token=token, operator_type=3)
     return result, 200

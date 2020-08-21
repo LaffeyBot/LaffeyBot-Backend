@@ -8,6 +8,7 @@ import json as js
 from . import record_blueprint
 from config import Config
 from server_app.push_notification_tools import push_ios
+from server_app.qq_tools import send_message_to_qq
 
 
 @record_blueprint.route('/add_record', methods=['POST'])
@@ -20,6 +21,7 @@ def add_record():
     @apiGroup Records
     @apiParam {String}  damage       (必须)    伤害
     @apiParam {String}  type         (必须)    出刀类型(normal:普通刀/last:尾刀/compensation:补偿刀)
+    @apiParam {String}  origin       (可选)    请求来源。例如「iOS 客户端」「Web 端」等
     @apiParam {String}  user_id      (可选)    出刀用户ID，如果不提供则默认为当前用户自己出刀
     @apiParam {String}  boss_gen     (可选)    boss周目（如果没有则为当前boss）
     @apiParam {String}  boss_order   (可选)    第几个boss（如果没有则为当前boss）
@@ -53,6 +55,7 @@ def add_record():
     boss_gen = json.get('boss_gen', None)
     boss_order = json.get('boss_order', None)
     user_id = json.get('user_id', None)
+    origin = json.get('origin', None)
 
     if not damage or not type_:
         return jsonify({"msg": "Parameter is missing"}), 400
@@ -125,6 +128,10 @@ def add_record():
         content += '。Boss 血量还剩' + str(team_record.boss_remaining_health) + '。'
     push_ios(user_name_list, '添加了新纪录', '', content)
 
+    origin = origin if origin else '客户端'
+    content = '通过' + origin + '添加了新的记录喵！\n' + content
+    headers = dict(auth=request.headers.get('auth'))
+    send_message_to_qq(message=content, id_=group.group_chat_id, type_='group', header=headers)
 
     return js.dumps(return_data, cls=AlchemyEncoder), 200
 
@@ -230,17 +237,39 @@ def delete_record():
 
     @apiSuccess (回参) {String}           msg   为"Successful!"
 
+    @apiErrorExample {json} 未提供参数
+        HTTP/1.1 400 Bad Request
+        {"msg": "Parameter is missing"}
 
     @apiErrorExample {json} 用户没有加入公会
         HTTP/1.1 403 Forbidden
         {"msg": "User is not in any group."}
 
-    @apiErrorExample {json} 用户的公会不存在
+    @apiErrorExample {json} 用户没有权限修改
         HTTP/1.1 417 Expectation Failed
-        {"msg": "User's group not found.", "code": 403}
+        {"msg": "Permission Denied"}
 
     """
-    pass
+    user: User = g.user
+    json = request.get_json(force=True)
+    id_ = json.get('id', None)
+
+    if not id_:
+        return jsonify({"msg": "Parameter is missing"}), 400
+    if not user.group_id:
+        return jsonify({"msg": "User is not in any group."}), 403
+
+    r = PersonalRecord.query.filter_by(id=id_, group_id=user.group_id).first()
+
+    if r.user.id == user.id or user.role > 0:  # 有权限删除
+        db.session.delete(r)
+        deletion_history = DeletionHistory(deleted_date=datetime.datetime.now(),
+                                           from_table='PersonalRecord',
+                                           deleted_id=id_)
+        db.session.add(deletion_history)
+        db.session.commit()
+    else:
+        return jsonify({"msg": "Permission Denied"}), 417
 
 
 @record_blueprint.route('/modify_record', methods=['POST'])
@@ -271,13 +300,9 @@ def modify_record():
         HTTP/1.1 403 Forbidden
         {"msg": "User is not in any group."}
 
-    @apiErrorExample {json} 用户的公会不存在
-        HTTP/1.1 403 Forbidden
-        {"msg": "User's group not found."}
-
-    @apiErrorExample {json} 用户的公会没有相应用户
-        HTTP/1.1 403 Forbidden
-        {"msg": "Group doesn't have a user with this ID.", "code": 404}
+    @apiErrorExample {json} 没有修改任何信息
+        HTTP/1.1 406 Not Acceptable
+        {'msg': 'Must submit one optional option'}
 
     @apiErrorExample {json} 用户没有权限修改
         HTTP/1.1 417 Expectation Failed
@@ -297,13 +322,15 @@ def modify_record():
     boss_gen = json.get('boss_gen', None)
     boss_order = json.get('boss_order', None)
     # 2.参数处理
+    if not user.group_id:
+        return jsonify({"msg": "User is not in any group."}), 403
     if not id_:
         return jsonify({"msg": "Parameter is missing"}), 400
     if not (damage or type_ or boss_gen or boss_order):
-        return jsonify({'msg': 'Must submit one optional option'}), 400
+        return jsonify({'msg': 'Must submit one optional option'}), 406
     # 3.判断是否有权限操作
     try:
-        r = PersonalRecord.query.filter_by(id=id_).first()
+        r = PersonalRecord.query.filter_by(id=id_, group_id=user.group_id).first()
         if not r:
             return jsonify({'msg': 'Record not found'}), 410
         # 3.1 判断是否是本人操作
