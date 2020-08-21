@@ -115,6 +115,8 @@ class PersonalRecord(db.Model):
     boss_order = db.Column(db.Integer, nullable=False)
     # 伤害
     damage = db.Column(db.Integer, nullable=False)
+    # 真实伤害，因为不记录这个的话OCR会记录重复项，不必须
+    real_damage = db.Column(db.Integer)
     # 积分，根据以上信息自动生成
     score = db.Column(db.Integer, nullable=False)
     # 用户ID
