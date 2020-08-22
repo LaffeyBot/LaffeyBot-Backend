@@ -34,11 +34,10 @@ class User(db.Model):
     # 外键关联Groups
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 查询挂树信息
-    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('user'), lazy='dynamic')
+    hang_on_trees = db.relationship('HangOnTree', backref=db.backref('user'), lazy='dynamic')
 
     # 查询个人出刀记录
     personal_records = db.relationship('PersonalRecord', backref=db.backref('user'), lazy='dynamic')
-    qq = db.Column(db.BigInteger)
 
     def __repr__(self):
         return '<users %r' % self.id
@@ -55,14 +54,17 @@ class Group(db.Model):
     description = db.Column(db.Text, nullable=False)
     # 必须申请出刀
     must_request = db.Column(db.Boolean, nullable=False)
+    # 会长id区分重名公会
+    leader_id = db.Column(db.String(25), nullable=False, unique=True)
     # 查询挂树信息
-    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('group'),lazy='dynamic')
+    hang_on_trees = db.relationship('HangOnTree', backref=db.backref('group'), lazy='dynamic')
     # 查询小组个人出刀记录
-    personal_records = db.relationship('PersonalRecord', backref=db.backref('group'),lazy='dynamic')
+    personal_records = db.relationship('PersonalRecord', backref=db.backref('group'), lazy='dynamic')
     # 查询小组成员
-    users = db.relationship('User', backref=db.backref('group'),lazy='dynamic')
+    users = db.relationship('User', backref=db.backref('group'), lazy='dynamic')
     # 查询公会排名信息
-    team_records = db.relationship('TeamRecord',backref=db.backref('group'),lazy='dynamic')
+    team_records = db.relationship('TeamRecord', backref=db.backref('group'), lazy='dynamic')
+
     def __repr__(self):
         return '<group %r' % self.id
 
@@ -104,7 +106,7 @@ class TeamBattleEpoch(db.Model):
     from_date = db.Column(db.DateTime)
     end_date = db.Column(db.DateTime)
     # 查询多类team_record记录
-    team_records = db.relationship('TeamRecord',backref=db.backref('team_battle_epoch'),lazy='dynamic')
+    team_records = db.relationship('TeamRecord', backref=db.backref('team_battle_epoch'), lazy='dynamic')
 
 
 class PersonalRecord(db.Model):
@@ -159,14 +161,13 @@ class HangOnTree(db.Model):
     # 说明信息，可空
     info = db.Column(db.Text, nullable=True)
     # 开始挂树时间信息
-    start_time = db.Column(db.DateTime,nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
     # 状态（是否挂树）
-    status = db.Column(db.Boolean,nullable=False)
+    status = db.Column(db.Boolean, nullable=False)
     # 关联公会
-    group_id = db.Column(db.Integer,db.ForeignKey('group.id'))
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
     # 关联用户
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
 
     def __repr__(self):
         return f'{self.id} is hanging on the tree'
