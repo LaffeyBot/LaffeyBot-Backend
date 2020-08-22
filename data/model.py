@@ -34,10 +34,11 @@ class User(db.Model):
     # 外键关联Groups
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 查询挂树信息
-    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('user'),lazy='dynamic')
+    hang_on_trees = db.relationship('HangOnTree',backref=db.backref('user'), lazy='dynamic')
 
     # 查询个人出刀记录
-    personal_records = db.relationship('PersonalRecord', backref=db.backref('user'),lazy='dynamic')
+    personal_records = db.relationship('PersonalRecord', backref=db.backref('user'), lazy='dynamic')
+    qq = db.Column(db.BigInteger)
 
     def __repr__(self):
         return '<users %r' % self.id
