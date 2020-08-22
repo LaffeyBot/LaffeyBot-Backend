@@ -38,6 +38,8 @@ class User(db.Model):
 
     # 查询个人出刀记录
     personal_records = db.relationship('PersonalRecord', backref=db.backref('user'), lazy='dynamic')
+    qq = db.Column(db.BigInteger)
+    is_temp = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return '<users %r' % self.id
