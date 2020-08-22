@@ -94,6 +94,7 @@ class DeletionHistory(db.Model):
     deleted_date = db.Column(db.DateTime, nullable=False)
     from_table = db.Column(db.Text, nullable=False)
     deleted_id = db.Column(db.Integer, nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
 
 
 class TeamBattleEpoch(db.Model):

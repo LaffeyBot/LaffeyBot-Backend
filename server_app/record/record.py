@@ -136,10 +136,14 @@ def add_record():
 
     origin = origin if origin else '客户端'
     content = '通过' + origin + '添加了新的记录喵！\n' + content
-    headers = dict(auth=request.headers.get('auth'))
-    send_message_to_qq(message=content, id_=group.group_chat_id, type_='group', header=headers)
 
-    return js.dumps(return_data, cls=AlchemyEncoder), 200
+    if origin == "QQ":
+        return_data = dict(message=content, id=group.group_chat_id, type='group')
+        return jsonify(return_data), 200
+    else:
+        headers = dict(auth=request.headers.get('auth'))
+        send_message_to_qq(message=content, id_=group.group_chat_id, type_='group', header=headers)
+        return js.dumps(return_data, cls=AlchemyEncoder), 200
 
 
 @record_blueprint.route('/get_records', methods=['GET'])
@@ -192,14 +196,18 @@ def get_records():
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
 
+    deleted = DeletionHistory.query.filter_by(group_id=group.id)
+
     if type_ == 'team':
         records = group.team_records
         date_type = TeamRecord.detail_date
         last_modified = TeamRecord.last_modified
+        deleted = deleted.filter(DeletionHistory.from_table == 'TeamRecord')
     else:
-        records = group.records
+        records = group.personal_records
         date_type = PersonalRecord.detail_date
         last_modified = PersonalRecord.last_modified
+        deleted = deleted.filter(DeletionHistory.from_table == 'PersonalRecord')
     print(records)
     if start_date.isdigit() and start_date != -1:
         start = datetime.datetime.fromtimestamp(int(start_date))
@@ -214,17 +222,24 @@ def get_records():
     if last_updated.isdigit():
         last_updated_date = datetime.datetime.fromtimestamp(int(last_updated))
         records = records.filter(last_modified >= last_updated_date)
+        deleted = deleted.filter(DeletionHistory.deleted_date >= last_updated_date)
 
     records_list: dict = records.order_by(date_type.desc()).all()
+    deleted: dict = deleted.all()
 
     # db.session.commit()
 
-    if last_updated.isdigit() and not records_list:
+    if last_updated.isdigit() and not records_list and not deleted:
         return '', 304  # 如果没有更新
+    if not deleted:
+        deleted = dict()
+    if not records_list:
+        records_list = dict()
 
     return js.dumps({
         "time": current_time,
-        "data": records_list
+        "data": records_list,
+        "deleted": deleted
     }, cls=AlchemyEncoder), 200
 
 
@@ -271,7 +286,8 @@ def delete_record():
         db.session.delete(r)
         deletion_history = DeletionHistory(deleted_date=datetime.datetime.now(),
                                            from_table='PersonalRecord',
-                                           deleted_id=id_)
+                                           deleted_id=id_,
+                                           group_id=user.group_id)
         db.session.add(deletion_history)
         db.session.commit()
     else:
@@ -355,4 +371,3 @@ def modify_record():
     except Exception as e:
         db.session.rollback()
         print(e)
-
