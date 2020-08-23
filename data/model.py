@@ -57,7 +57,7 @@ class Group(db.Model):
     # 必须申请出刀
     must_request = db.Column(db.Boolean, nullable=False)
     # 会长id区分重名公会
-    leader_id = db.Column(db.String(25), nullable=False, unique=True)
+    leader_id = db.Column(db.String(25), nullable=False)
     # 查询挂树信息
     hang_on_trees = db.relationship('HangOnTree', backref=db.backref('group'), lazy='dynamic')
     # 查询小组个人出刀记录
@@ -99,6 +99,7 @@ class DeletionHistory(db.Model):
     deleted_date = db.Column(db.DateTime, nullable=False)
     from_table = db.Column(db.Text, nullable=False)
     deleted_id = db.Column(db.Integer, nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
 
 
 class TeamBattleEpoch(db.Model):

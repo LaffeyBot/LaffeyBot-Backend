@@ -135,14 +135,15 @@ def add_record():
     push_ios(user_name_list, '添加了新纪录', '', content)
 
     origin = origin if origin else '客户端'
-    content = '通过' + origin + '添加了新的记录喵！\n' + content
+    msg = '通过' + origin + '添加了新的记录喵！'
+    msg += '\n' + content
 
     if origin == "QQ":
-        return_data = dict(message=content, id=group.group_chat_id, type='group')
+        return_data = dict(message=msg, id=group.group_chat_id, type='group')
         return jsonify(return_data), 200
     else:
         headers = dict(auth=request.headers.get('auth'))
-        send_message_to_qq(message=content, id_=group.group_chat_id, type_='group', header=headers)
+        send_message_to_qq(message=msg, id_=group.group_chat_id, type_='group', header=headers)
         return js.dumps(return_data, cls=AlchemyEncoder), 200
 
 

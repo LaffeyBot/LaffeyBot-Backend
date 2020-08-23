@@ -74,6 +74,7 @@ def link_account():
     account_to_link.qq = qq_temp_user.qq
     account_to_link.group_id = qq_temp_user.group_id
     account_to_link.nickname = qq_temp_user.nickname
+    account_to_link.role = qq_temp_user.role
 
     qq_temp_user.personal_records.update({
         PersonalRecord.last_modified: datetime.datetime.now(),
