@@ -2,14 +2,13 @@ from flask import request, jsonify, g
 import datetime
 from ..auth_tools import login_required
 from data.model import *
-from .record_tools import damage_to_score, subtract_damage_from_group
+from .record_tools import damage_to_score, subtract_damage_from_group, make_new_team_record
 from data.alchemy_encoder import AlchemyEncoder
 import json as js
 from . import record_blueprint
 from config import Config
 from server_app.push_notification_tools import push_ios
 from server_app.qq_tools import send_message_to_qq
-import asyncio
 
 
 @record_blueprint.route('/add_record', methods=['POST'])
@@ -71,18 +70,7 @@ def add_record():
     team_record: TeamRecord = group.team_records \
         .order_by(TeamRecord.detail_date.desc()).limit(1).first()
     if not team_record:
-        current_epoch: TeamBattleEpoch = TeamBattleEpoch.query \
-            .order_by(TeamBattleEpoch.end_date.desc()).limit(1).first()
-        team_record = TeamRecord(detail_date=datetime.datetime.now(),
-                                 epoch_id=current_epoch.id,
-                                 group_id=group.id,
-                                 current_boss_gen=1,
-                                 current_boss_order=1,
-                                 boss_remaining_health=Config.BOSS_HEALTH[0],
-                                 last_modified=datetime.datetime.now())
-        db.session.add(team_record)
-        db.session.commit()
-        db.session.refresh(team_record)
+        team_record = make_new_team_record(group_id=group.id)
     else:
         team_record.last_modified = datetime.datetime.now()
 
@@ -145,154 +133,6 @@ def add_record():
         headers = dict(auth=request.headers.get('auth'))
         send_message_to_qq(message=msg, id_=group.group_chat_id, type_='group', header=headers)
         return js.dumps(return_data, cls=AlchemyEncoder), 200
-
-
-@record_blueprint.route('/get_records', methods=['GET'])
-@login_required
-def get_records():
-    """
-    @api {post} /v1/record/get_records 获取出刀列表
-    @apiVersion 1.0.0
-    @apiName get_records
-    @apiGroup Records
-    @apiParam {String}  type              (必要)    personal：个人出刀记录/team：公会状态记录
-    @apiParam {int}     limit             (可选)    多少条数据
-    @apiParam {String}  page              (可选)    第几页(如果提供page则必须提供limit）(0为第一页）
-    @apiParam {int}     start_date        (可选)    开始日期时间戳（秒）
-    @apiParam {int}     end_date          (可选)    结束日期时间戳（秒）
-    @apiParam {int}     last_updated      (可选)    在此时间之后更新的记录会被返回，deleted 项会记录在此时间之后删除的项。
-    @apiDescription 返回公会中的出刀列表，如果无参数则返回所有出刀记录。
-
-
-    @apiSuccess (回参) {String}           msg   为"Successful!"
-    @apiSuccess (回参) {List[Dictionary]} data  相应的Records，具体内容参照PersonalRecord/TeamRecord表
-
-    @apiSuccessExample {json} 没有更新
-        HTTP/1.1 304 Not Modified
-        # 注：只有在指定了last_updated 之后才会返回这一选项
-
-    @apiErrorExample {json} 用户没有加入公会
-        HTTP/1.1 403 Forbidden
-        {"msg": "User is not in any group."}
-
-    @apiErrorExample {json} 用户的公会不存在
-        HTTP/1.1 417 Expectation Failed
-        {"msg": "User's group not found.", "code": 403}
-
-    """
-    user: User = g.user
-    limit: str = request.args.get('limit', '')
-    page: str = request.args.get('page', '')
-    start_date: str = request.args.get('start_date', '')
-    end_date: str = request.args.get('end_date', '')
-    type_: str = request.args.get('type', 'personal')
-    last_updated = request.args.get('last_updated', '')
-
-    current_time = int(datetime.datetime.timestamp(datetime.datetime.now()))
-
-    if user.group_id == -1:
-        return jsonify({"msg": "User is not in any group."}), 403
-
-    group: Group = user.group
-    if not group:
-        return jsonify({"msg": "User's group not found."}), 417
-
-    deleted = DeletionHistory.query.filter_by(group_id=group.id)
-
-    if type_ == 'team':
-        records = group.team_records
-        date_type = TeamRecord.detail_date
-        last_modified = TeamRecord.last_modified
-        deleted = deleted.filter(DeletionHistory.from_table == 'TeamRecord')
-    else:
-        records = group.personal_records
-        date_type = PersonalRecord.detail_date
-        last_modified = PersonalRecord.last_modified
-        deleted = deleted.filter(DeletionHistory.from_table == 'PersonalRecord')
-    print(records)
-    if start_date.isdigit() and start_date != -1:
-        start = datetime.datetime.fromtimestamp(int(start_date))
-        records = records.filter(date_type >= start)
-    if end_date.isdigit() and end_date != -1:
-        end = datetime.datetime.fromtimestamp(int(end_date))
-        records = records.filter(date_type <= end)
-    if limit.isdigit() and limit != 0:
-        records = records.limit(int(limit))
-        if page.isdigit() and page != 0:
-            records = records.offset(int(limit) * int(page))
-    if last_updated.isdigit():
-        last_updated_date = datetime.datetime.fromtimestamp(int(last_updated))
-        records = records.filter(last_modified >= last_updated_date)
-        deleted = deleted.filter(DeletionHistory.deleted_date >= last_updated_date)
-
-    records_list: dict = records.order_by(date_type.desc()).all()
-    deleted: dict = deleted.all()
-
-    # db.session.commit()
-
-    if last_updated.isdigit() and not records_list and not deleted:
-        return '', 304  # 如果没有更新
-    if not deleted:
-        deleted = dict()
-    if not records_list:
-        records_list = dict()
-
-    return js.dumps({
-        "time": current_time,
-        "data": records_list,
-        "deleted": deleted
-    }, cls=AlchemyEncoder), 200
-
-
-@record_blueprint.route('/delete_record', methods=['DELETE'])
-@login_required
-def delete_record():
-    """
-    @api {post} /v1/record/delete_record 删除一条记录
-    @apiVersion 1.0.0
-    @apiName delete_record
-    @apiGroup Records
-    @apiParam {String}  type              (必要)    personal：个人出刀记录/team：公会状态记录
-    @apiParam {int}     id                (必要)    出刀ID
-    @apiDescription 删除一条记录。操作者必须是本人或管理员。
-
-
-    @apiSuccess (回参) {String}           msg   为"Successful!"
-
-    @apiErrorExample {json} 未提供参数
-        HTTP/1.1 400 Bad Request
-        {"msg": "Parameter is missing"}
-
-    @apiErrorExample {json} 用户没有加入公会
-        HTTP/1.1 403 Forbidden
-        {"msg": "User is not in any group."}
-
-    @apiErrorExample {json} 用户没有权限修改
-        HTTP/1.1 417 Expectation Failed
-        {"msg": "Permission Denied"}
-
-    """
-    user: User = g.user
-    json = request.get_json(force=True)
-    id_ = json.get('id', None)
-
-    if not id_:
-        return jsonify({"msg": "Parameter is missing"}), 400
-    if not user.group_id:
-        return jsonify({"msg": "User is not in any group."}), 403
-
-    r = PersonalRecord.query.filter_by(id=id_, group_id=user.group_id).first()
-
-    if r.user.id == user.id or user.role > 0:  # 有权限删除
-        db.session.delete(r)
-        deletion_history = DeletionHistory(deleted_date=datetime.datetime.now(),
-                                           from_table='PersonalRecord',
-                                           deleted_id=id_,
-                                           group_id=user.group_id)
-        db.session.add(deletion_history)
-        db.session.commit()
-    else:
-        return jsonify({"msg": "Permission Denied"}), 417
 
 
 @record_blueprint.route('/modify_record', methods=['POST'])
@@ -367,6 +207,9 @@ def modify_record():
             if boss_gen:
                 r.boss_gen = boss_gen
             db.session.commit()
+            return js.dumps({
+                "team_record": r
+            }, cls=AlchemyEncoder), 200
         else:
             return jsonify({"msg": "Permission Denied"}), 417
     except Exception as e:

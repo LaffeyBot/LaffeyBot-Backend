@@ -20,7 +20,7 @@ class User(db.Model):
     # 密码，hashed using bcrypt
     password = db.Column(db.Text, nullable=False)
     # 创建时间，自动生成
-    created_at = db.Column(db.Date, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)
     # 绑定的邮箱，可空
     email = db.Column(db.Text)
     # 邮箱已验证
@@ -30,7 +30,7 @@ class User(db.Model):
     # 手机号已验证
     phone_verified = db.Column(db.Boolean, nullable=False)
     # 在此日期之前的 token 都会失效（比如更改密码时之类的）
-    valid_since = db.Column(db.Date, nullable=False)
+    valid_since = db.Column(db.DateTime, nullable=False)
     # 外键关联Groups
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 查询挂树信息
@@ -38,6 +38,7 @@ class User(db.Model):
 
     # 查询个人出刀记录
     personal_records = db.relationship('PersonalRecord', backref=db.backref('user'), lazy='dynamic')
+    # QQ 号
     qq = db.Column(db.BigInteger)
     is_temp = db.Column(db.Boolean, default=False)
 
@@ -58,14 +59,18 @@ class Group(db.Model):
     must_request = db.Column(db.Boolean, nullable=False)
     # 会长id区分重名公会
     leader_id = db.Column(db.String(25), nullable=False)
+    # 区分是否是机器人添加的临时公会
+    is_temp = db.Column(db.Boolean,nullable=False)
     # 查询挂树信息
-    hang_on_trees = db.relationship('HangOnTree', backref=db.backref('group'), lazy='dynamic')
+    hang_on_trees = db.relationship('HangOnTree', backref='group', lazy='dynamic', cascade="all,delete")
     # 查询小组个人出刀记录
-    personal_records = db.relationship('PersonalRecord', backref=db.backref('group'), lazy='dynamic')
+    personal_records = db.relationship('PersonalRecord', backref='group', lazy='dynamic')
     # 查询小组成员
     users = db.relationship('User', backref=db.backref('group'), lazy='dynamic')
+    # 查询公会Boss状态，一对一
+    team_record = db.relationship('TeamRecord', backref='group', lazy='dynamic', cascade="all,delete")
     # 查询公会排名信息
-    team_records = db.relationship('TeamRecord', backref=db.backref('group'), lazy='dynamic')
+    team_ranks = db.relationship('TeamRank', backref='group', lazy='dynamic', cascade="all,delete")
 
     def __repr__(self):
         return '<group %r' % self.id
@@ -74,8 +79,6 @@ class Group(db.Model):
 class TeamRecord(db.Model):
     __tablename__ = 'team_record'
     id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
-    record = db.Column(db.Integer)
-    detail_date = db.Column(db.DateTime, nullable=False)
     # 公会代数ID
     epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
     # 对应的 Epoch Object
@@ -91,6 +94,24 @@ class TeamRecord(db.Model):
 
     def __repr__(self):
         return '<team_record %r' % self.id
+
+
+class TeamRank(db.Model):
+    __tablename__ = 'team_rank'
+    id = db.Column(db.Integer, primary_key=True, index=True, unique=True, autoincrement=True)
+    # 公会代数ID
+    epoch_id = db.Column(db.Integer, db.ForeignKey('team_battle_epoch.id'))
+    # 公会ID
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    # 公会排名
+    rank = db.Column(db.Integer, nullable=False)
+    # 总伤害
+    total_score = db.Column(db.BigInteger, nullable=False)
+    # 记录时间
+    record_date = db.Column(db.DateTime, nullable=False)
+
+    def __repr__(self):
+        return '<team_rank %r' % self.id
 
 
 class DeletionHistory(db.Model):
