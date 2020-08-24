@@ -40,6 +40,7 @@ class User(db.Model):
     personal_records = db.relationship('PersonalRecord', backref=db.backref('user'), lazy='dynamic')
     # QQ 号
     qq = db.Column(db.BigInteger)
+    is_temp = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return '<users %r' % self.id
@@ -57,7 +58,7 @@ class Group(db.Model):
     # 必须申请出刀
     must_request = db.Column(db.Boolean, nullable=False)
     # 会长id区分重名公会
-    leader_id = db.Column(db.String(25), nullable=False, unique=True)
+    leader_id = db.Column(db.String(25), nullable=False)
     # 区分是否是机器人添加的临时公会
     is_temp = db.Column(db.Boolean,nullable=False)
     # 查询挂树信息
@@ -119,6 +120,7 @@ class DeletionHistory(db.Model):
     deleted_date = db.Column(db.DateTime, nullable=False)
     from_table = db.Column(db.Text, nullable=False)
     deleted_id = db.Column(db.Integer, nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
 
 
 class TeamBattleEpoch(db.Model):

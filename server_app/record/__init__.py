@@ -9,3 +9,4 @@ record_blueprint = Blueprint(
 from .record import *
 from .add_record_if_needed import *
 from .delete_record import *
+from .get_records import *

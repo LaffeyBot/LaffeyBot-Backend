@@ -29,8 +29,7 @@ def subtract_damage_from_group(record: PersonalRecord, team_record: TeamRecord):
 def make_new_team_record(group_id: int) -> TeamRecord:
     current_epoch: TeamBattleEpoch = TeamBattleEpoch.query \
         .order_by(TeamBattleEpoch.end_date.desc()).limit(1).first()
-    team_record = TeamRecord(detail_date=datetime.datetime.now(),
-                             epoch_id=current_epoch.id,
+    team_record = TeamRecord(epoch_id=current_epoch.id,
                              group_id=group_id,
                              current_boss_gen=1,
                              current_boss_order=1,
