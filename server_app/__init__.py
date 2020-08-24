@@ -20,6 +20,7 @@ def create_app(config_file=config.Config):
     from .send_email import email_blueprint
     from .push_notification import pn_blueprint
     from .account import account_blueprint
+    from .generate_report import generate_report_blueprint
 
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(group_blueprint)
@@ -27,6 +28,7 @@ def create_app(config_file=config.Config):
     app.register_blueprint(email_blueprint)
     app.register_blueprint(pn_blueprint)
     app.register_blueprint(account_blueprint)
+    app.register_blueprint(generate_report_blueprint)
 
     @app.route('/')
     def hello_world():
