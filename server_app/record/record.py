@@ -67,8 +67,8 @@ def add_record():
     group: Group = user.group
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
-    team_record: TeamRecord = group.team_records \
-        .order_by(TeamRecord.detail_date.desc()).limit(1).first()
+    team_record: TeamRecord = group.team_record \
+        .order_by(TeamRecord.last_modified.desc()).first()
     if not team_record:
         team_record = make_new_team_record(group_id=group.id)
     else:

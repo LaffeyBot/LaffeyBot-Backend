@@ -63,7 +63,7 @@ def push_ios(account_list: list, title: str, subtitle: str, content: str):
             }
         }
     }
-    print('-------------------------')
+    print("-------------------------")
     print(data)
     r = requests.post(base_url, json=data, headers=generate_header(data))
     return r.json()

@@ -65,10 +65,13 @@ def get_records():
     deleted = DeletionHistory.query.filter_by(group_id=group.id)
 
     if type_ == 'team':
-        records = group.team_records
-        date_type = TeamRecord.detail_date
-        last_modified = TeamRecord.last_modified
-        deleted = deleted.filter(DeletionHistory.from_table == 'TeamRecord')
+        records = group.team_record.order_by(TeamRecord.last_modified.desc()).first()
+        if not records:
+            make_new_team_record(group_id=group.id)
+            records = group.team_record.order_by(TeamRecord.last_modified.desc()).first()
+        return js.dumps({
+            "data": records
+        }, cls=AlchemyEncoder), 200
     elif type_ == 'personal':
         records = group.personal_records
         date_type = PersonalRecord.detail_date
@@ -81,7 +84,6 @@ def get_records():
         deleted = deleted.filter(DeletionHistory.from_table == 'TeamRank')
     else:
         return jsonify({'msg': 'Illegal type parameter'}), 416
-    print(records)
     if start_date.isdigit() and start_date != -1:
         start = datetime.datetime.fromtimestamp(int(start_date))
         records = records.filter(date_type >= start)
