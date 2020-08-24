@@ -44,7 +44,10 @@ def delete_record():
 
     r = PersonalRecord.query.filter_by(id=id_, group_id=user.group_id).first()
 
-    if r and (r.user.id == user.id or user.role > 0):  # 有权限删除
+    if not r:
+        return jsonify({"msg": "Already deleted"}), 200
+
+    if r.user.id == user.id or user.role > 0:  # 有权限删除
         db.session.delete(r)
         deletion_history = DeletionHistory(deleted_date=datetime.datetime.now(),
                                            from_table='PersonalRecord',
