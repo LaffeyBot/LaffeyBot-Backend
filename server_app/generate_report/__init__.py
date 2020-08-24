@@ -6,4 +6,4 @@ generate_report_blueprint = Blueprint(
     url_prefix='/v1/generate_report'
 )
 
-from .auth import *
+from .generate_report import *
