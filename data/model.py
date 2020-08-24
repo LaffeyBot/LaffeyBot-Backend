@@ -144,6 +144,8 @@ class PersonalRecord(db.Model):
     boss_order = db.Column(db.Integer, nullable=False)
     # 伤害
     damage = db.Column(db.Integer, nullable=False)
+    # 伤害
+    real_damage = db.Column(db.Integer, nullable=True)
     # 积分，根据以上信息自动生成
     score = db.Column(db.Integer, nullable=False)
     # 用户ID

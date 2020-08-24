@@ -1,9 +1,10 @@
 from . import generate_report_blueprint
 from server_app.auth_tools import login_required, sign, get_user_with
-from flask import g, jsonify, request, send_from_directory
+from flask import g, jsonify, request, send_file
 from .generate_report_tool import make_xlsx_for_group
 from config import Config
 import jwt
+import datetime
 
 
 @generate_report_blueprint.route('/generate', methods=['GET'])
@@ -29,9 +30,12 @@ def generate():
         return jsonify({'msg': 'User does not have a group'})
     auth_dict = {
         'user_id': g.user.id,
-        'for': 'generate_report'
+        "iss": Config.DOMAIN_NAME,
+        "aud": Config.FRONTEND_DOMAIN_NAME,
+        "iat": int(datetime.datetime.now().timestamp()),
     }
     signed = sign(auth_dict)
+    print(signed)
     return jsonify({
         "msg": "Successful!",
         "url": Config.SELF_URL + '/v1/generate_report/download?auth=' + signed
@@ -49,6 +53,7 @@ def report_download():
     @apiSuccess (回参) {File}   生成的xlsx文件
     """
     auth_header = request.args.get('auth', None)
+    print(auth_header)
     if not auth_header:
         return jsonify({'msg': 'You must provide a auth header.'})
     try:
@@ -58,7 +63,7 @@ def report_download():
                                 audience=Config.DOMAIN_NAME)
     except jwt.exceptions.InvalidTokenError:
         return jsonify({"msg": "Auth sign does not verify"}), 401
-    user_id = decode_jwt.get('id', None)
+    user_id = decode_jwt.get('user_id', None)
     user = get_user_with(id_=user_id)
     if not user:
         return jsonify({"msg": "User not found."}), 402
@@ -66,4 +71,4 @@ def report_download():
     if not group:
         return jsonify({'msg': 'User does not have a group'})
     make_xlsx_for_group(group_id=group.id)
-    return send_from_directory('temp', filename=f'group-{group.id}-report.xlsx', as_attachment=True)
+    return send_file(f'temp\\group-{group.id}-report.xlsx', as_attachment=True)
