@@ -19,9 +19,13 @@ def make_xlsx_for_group(group_id: int):
     worksheet.set_column(1, 1, 15)
 
     # Write some data headers.
-    worksheet.write('A1', 'Item', bold)
-    worksheet.write('B1', 'Date', bold)
-    worksheet.write('C1', 'Cost', bold)
+    worksheet.write('A1', '出刀时间', bold)
+    worksheet.write('B1', '出刀玩家', bold)
+    worksheet.write('C1', 'Boss周目', bold)
+    worksheet.write('D1', 'Boss编号', bold)
+    worksheet.write('E1', '伤害', bold)
+    worksheet.write('F1', '分数', bold)
+    worksheet.write('G1', '出刀类型', bold)
 
     # Start from the first cell below the headers.
     row = 1
