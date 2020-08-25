@@ -35,6 +35,7 @@ class User(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 查询挂树信息
     hang_on_trees = db.relationship('HangOnTree', backref=db.backref('user'), lazy='dynamic')
+    is_fetching = db.Column(db.Boolean, default=False)
 
     # 查询个人出刀记录
     personal_records = db.relationship('PersonalRecord', backref=db.backref('user'), lazy='dynamic')
