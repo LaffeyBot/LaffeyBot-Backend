@@ -119,12 +119,14 @@ def add_record():
     if team_record.boss_remaining_health == Config.BOSS_HEALTH[team_record.current_boss_order - 1]:
         content += '并击破。'
     else:
-        content += '。Boss 血量还剩' + str(team_record.boss_remaining_health) + '。'
+        content += str(team_record.current_boss_order) + \
+                   '王血量还剩' + str(team_record.boss_remaining_health) + '。'
     push_ios(user_name_list, '添加了新纪录', '', content)
 
     origin = origin if origin else '客户端'
     msg = '通过' + origin + '添加了新的记录喵！'
     msg += '\n' + content
+    msg += '\n当前为' + str(team_record.current_boss_gen) + '周目'
 
     if origin == "QQ":
         return_data = dict(message=msg, id=group.group_chat_id, type='group')
