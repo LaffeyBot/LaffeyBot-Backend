@@ -48,8 +48,8 @@ def add_record_if_needed():
     group: Group = user.group
     if not group:
         return jsonify({"msg": "User's group not found."}), 417
-    team_record: TeamRecord = group.team_records \
-        .order_by(TeamRecord.detail_date.desc()).limit(1).first()
+    team_record: TeamRecord = group.team_record \
+        .order_by(TeamRecord.last_modified.desc()).first()
     if not team_record:
         current_epoch: TeamBattleEpoch = TeamBattleEpoch.query \
             .order_by(TeamBattleEpoch.end_date.desc()).limit(1).first()
@@ -66,7 +66,8 @@ def add_record_if_needed():
     else:
         team_record.last_modified = datetime.datetime.now()
 
-    user_of_attack = User.query.filter_by(nickname=nickname, group_id=group.id).first()
+    closest_name = get_closest_player_name(nickname, group_id=group.id)
+    user_of_attack = User.query.filter_by(nickname=closest_name, group_id=group.id).first()
     if not user_of_attack:
         return jsonify({"msg": "Group doesn't have a user with this name."}), 412
     start = datetime.datetime.now() - timedelta(days=1)
@@ -87,8 +88,8 @@ def add_record_if_needed():
                                                   boss_order=team_record.current_boss_order,
                                                   damage=damage,
                                                   real_damage=real_damage,
-                                                  user_id=user.id,
-                                                  nickname=user.nickname,
+                                                  user_id=user_of_attack.id,
+                                                  nickname=user_of_attack.nickname,
                                                   detail_date=datetime.datetime.now(),
                                                   type=type_,
                                                   last_modified=datetime.datetime.now(),
@@ -102,7 +103,7 @@ def add_record_if_needed():
     user_name_list = []
     for user_obj in group.users:
         user_name_list.append(user_obj.username)
-    damage_msg = user.nickname
+    damage_msg = user_of_attack.nickname
     damage_msg += '对' + str(team_record.current_boss_order) + '王'
     damage_msg += '造成了' + str(added_record.damage) + '点伤害'
     if team_record.boss_remaining_health == Config.BOSS_HEALTH[team_record.current_boss_order - 1]:
@@ -116,3 +117,26 @@ def add_record_if_needed():
     send_message_to_qq(message=damage_msg, id_=group.group_chat_id, type_='group', header=headers)
 
     return jsonify({"msg": "Successful!"}), 200
+
+
+def get_closest_player_name(name: str, group_id: int):
+    players = User.query.filter_by(group_id=group_id).all()
+    all_players_list = list()
+    player: User
+    for player in players:
+        all_players_list.append([player.nickname, 0])
+
+    for element in all_players_list:
+        for letter in name:
+            if letter in element[0]:
+                element[1] += 1
+
+    all_players_list.sort(key=sort_by_relevance, reverse=True)
+    if all_players_list[0][1] == 0:
+        return '不知道是谁'
+    else:
+        return all_players_list[0][0]
+
+
+def sort_by_relevance(element):
+    return element[1]

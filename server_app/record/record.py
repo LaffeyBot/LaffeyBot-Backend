@@ -63,6 +63,10 @@ def add_record():
         return jsonify({"msg": "Parameter is missing"}), 400
     if user.group_id is None:
         return jsonify({"msg": "User is not in any group."}), 403
+    if boss_gen:
+        boss_gen = int(boss_gen)
+    if boss_order:
+        boss_order = int(boss_order)
 
     group: Group = user.group
     if not group:
@@ -114,7 +118,7 @@ def add_record():
     for user_obj in group.users:
         user_name_list.append(user_obj.username)
     content = user.nickname
-    content += '对' + str(team_record.current_boss_order) + '王'
+    content += '对' + str(added_record.boss_order) + '王'
     content += '造成了' + str(added_record.damage) + '点伤害'
     if team_record.boss_remaining_health == Config.BOSS_HEALTH[team_record.current_boss_order - 1]:
         content += '并击破。'
@@ -126,7 +130,7 @@ def add_record():
     origin = origin if origin else '客户端'
     msg = '通过' + origin + '添加了新的记录喵！'
     msg += '\n' + content
-    msg += '\n当前为' + str(team_record.current_boss_gen) + '周目'
+    msg += '\n' + '当前为' + str(team_record.current_boss_gen) + '周目'
 
     if origin == "QQ":
         return_data = dict(message=msg, id=group.group_chat_id, type='group')

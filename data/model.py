@@ -35,6 +35,7 @@ class User(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=True)
     # 查询挂树信息
     hang_on_trees = db.relationship('HangOnTree', backref=db.backref('user'), lazy='dynamic')
+    is_fetching = db.Column(db.Boolean, default=False)
 
     # 查询个人出刀记录
     personal_records = db.relationship('PersonalRecord', backref=db.backref('user'), lazy='dynamic')
@@ -144,6 +145,8 @@ class PersonalRecord(db.Model):
     boss_order = db.Column(db.Integer, nullable=False)
     # 伤害
     damage = db.Column(db.Integer, nullable=False)
+    # 伤害
+    real_damage = db.Column(db.Integer, nullable=True)
     # 积分，根据以上信息自动生成
     score = db.Column(db.Integer, nullable=False)
     # 用户ID

@@ -9,7 +9,7 @@ def damage_to_score(record: PersonalRecord) -> int:
         multiplier = [1.0, 1.0, 1.1, 1.1, 1.2]
     else:
         multiplier = [1.2, 1.2, 1.5, 1.7, 2.0]
-    return int(int(record.damage) * multiplier[record.boss_gen-1])
+    return int(int(record.damage) * multiplier[int(record.boss_gen)-1])
 
 
 def subtract_damage_from_group(record: PersonalRecord, team_record: TeamRecord):
@@ -38,3 +38,4 @@ def make_new_team_record(group_id: int) -> TeamRecord:
     db.session.add(team_record)
     db.session.commit()
     db.session.refresh(team_record)
+    return team_record
