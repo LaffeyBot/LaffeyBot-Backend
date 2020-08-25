@@ -20,7 +20,6 @@ def add_record_if_needed():
     @apiGroup Records
     @apiParam {String}  damage       (必须)    伤害
     @apiParam {String}  nickname     (必须)    出刀用户游戏名/nickname
-    @apiParam {String}  group_id     (必须)    公会ID
 
     @apiSuccess (回参) {String}     msg        为"Successful!"
 
