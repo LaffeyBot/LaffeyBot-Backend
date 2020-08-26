@@ -52,8 +52,10 @@ def set_ocr_status():
     json = request.get_json(force=True)
     is_fetching = json.get('status', None)
     origin = json.get('origin', None)
+    print(json)
     if isinstance(is_fetching, bool):
         user.is_fetching = is_fetching
+        db.session.commit()
         status_text = '开始抓取了。如需停止请发送【停止抓取】' if is_fetching else '停止抓取了。如需开始请发送【开始抓取】。'
         if origin and origin == 'QQ':
             return jsonify({'msg': status_text})

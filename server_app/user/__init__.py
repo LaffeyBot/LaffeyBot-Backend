@@ -5,3 +5,5 @@ user_blueprint = Blueprint(
     __name__,
     url_prefix='/v1/user'
 )
+
+from .ocr_status import *
