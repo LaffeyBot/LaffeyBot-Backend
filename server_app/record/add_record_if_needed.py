@@ -74,6 +74,14 @@ def add_record_if_needed():
         .filter(PersonalRecord.detail_date > start).first()
     if existing_record:
         return jsonify({"msg": "Already Recorded. "}), 200
+    else:
+        existing_record = PersonalRecord.query\
+            .filter(PersonalRecord.real_damage.is_(None),
+                    PersonalRecord.damage == damage,
+                    PersonalRecord.group_id == group.id,
+                    PersonalRecord.detail_date > start).first()
+        if existing_record:
+            return jsonify({"msg": "Already Recorded. "}), 200
 
     real_damage = damage
     if team_record.boss_remaining_health <= damage:
