@@ -1,11 +1,11 @@
 from flask import jsonify, g, Flask
 import config
 from flask_cors import CORS
-import logging
 
 
 def create_app(config_file=config.Config):
     app = Flask(__name__)
+    import logging
     logging.basicConfig(filename='flask.log', level=logging.DEBUG)
     app.config.from_object(config_file)
     CORS(app)
