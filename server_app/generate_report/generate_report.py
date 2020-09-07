@@ -50,7 +50,7 @@ def report_download():
     @apiName report_download
     @apiGroup GenerateReport
 
-    @apiSuccess (回参) {File}   生成的xlsx文件
+    @apiSuccess (回参) {File} Attachment  生成的xlsx文件
     """
     auth_header = request.args.get('auth', None)
     print(auth_header)

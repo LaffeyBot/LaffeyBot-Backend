@@ -12,7 +12,7 @@ def link_account():
     """
     @api {post} /v1/account/link_account  绑定QQ账号（仅供Bot使用）
     @apiVersion 1.0.0
-    @apiName sign_up
+    @apiName link_account
     @apiGroup Users
     @apiParam {String}  username   (必须)    绑定的用户名
 

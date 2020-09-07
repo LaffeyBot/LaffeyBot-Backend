@@ -50,8 +50,7 @@ def sign_up():
     @apiErrorExample {json} 用户名或密码过短
         HTTP/1.1 422 Unprocessable Entity
         {
-            "msg": "Username or password is too short",
-            "code": 102
+            "msg": "Username or password is too short"
         }
 
     @apiErrorExample {json} 用户名已存在
